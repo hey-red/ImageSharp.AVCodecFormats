@@ -26,10 +26,23 @@ On linux you can install FFmpeg(4.3.x) from your package manager, but I have no 
 ## Usage
 
 ```C#
+using System.IO;
+
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 
-// Create your custom configuration with required decoders:
+// Import decoders
+using HeyRed.ImageSharp.AVCodecFormats.Avi;
+using HeyRed.ImageSharp.AVCodecFormats.Mkv;
+using HeyRed.ImageSharp.AVCodecFormats.Mov;
+using HeyRed.ImageSharp.AVCodecFormats.Mp3;
+using HeyRed.ImageSharp.AVCodecFormats.Mp4;
+using HeyRed.ImageSharp.AVCodecFormats.MpegTs;
+using HeyRed.ImageSharp.AVCodecFormats.Webm;
+using HeyRed.ImageSharp.AVCodecFormats.Wmv;
+
+// Create your custom configuration with required decoders
 var configuration = new Configuration(
     new AviConfigurationModule(),
     new MkvConfigurationModule(),
@@ -43,12 +56,14 @@ var configuration = new Configuration(
 using var inputStream = File.OpenRead("/path/to/video.mp4");
 using var outputStream = File.OpenWrite("/path/to/resized_image.jpeg");
 
-// Pass it into image load method(for example):
+// Pass it into image load method(for example)
 using var image = Image.Load(configuration, inputStream);
 
+// Resize
 image.Mutate(x => x.Resize(image.Width / 2, image.Height / 2)); 
 
-image.Save(outputStream);
+// Save using jpeg encoder
+image.Save(outputStream, new JpegEncoder());
 ```
 More info <https://docs.sixlabors.com/articles/imagesharp/configuration.html>
 
