@@ -53,10 +53,12 @@ image.Save(outputStream);
 More info <https://docs.sixlabors.com/articles/imagesharp/configuration.html>
 
 ## Supported formats
-mp4, webm, avi, mkv, mov, ts, wmv, mp3(extract cover image)
+mp4, webm, avi, mkv, mov, ts, wmv, mp3(extract cover image).
 
 ## Supported codecs
-H263, H264, VP8, VP9, AV1, MPEG-4, MJPEG, MS MPEG4(v1,v2,v3), WMV(v1,v2,v3), MPEG-1 Audio Layer 3
+[Native package](https://www.nuget.org/packages/ImageSharp.AVCodecFormats.Native) provides codecs listed below:
+
+H263, H264, VP8, VP9, AV1, MPEG-4, MJPEG, MS MPEG4(v1,v2,v3), WMV(v1,v2,v3), VC-1, MPEG-1 Audio Layer 3.
 
 ## License
 [MIT](LICENSE)
