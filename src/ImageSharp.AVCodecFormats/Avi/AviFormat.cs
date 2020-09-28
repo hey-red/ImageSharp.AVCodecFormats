@@ -14,9 +14,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Avi
 
         public string Name => "AVI";
 
-        public string DefaultMimeType => "video/x-msvideo";
+        public string DefaultMimeType => "video/avi";
 
-        public IEnumerable<string> MimeTypes => new[] { "video/x-msvideo", };
+        public IEnumerable<string> MimeTypes => new[] { "video/avi", "video/msvideo", "video/x-msvideo", };
 
         public IEnumerable<string> FileExtensions => new[] { "avi" };
 
