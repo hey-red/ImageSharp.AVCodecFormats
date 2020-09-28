@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <version>1.0.0</version>
+    <Authors>red</Authors>
+    <RootNamespace>HeyRed.ImageSharp.AVCodecFormats</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Description>Package contains a bunch of ffmpeg-based decoders that allows to extract frames from video and processing it's using ImageSharp.</Description>
+    <PackageProjectUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>imagesharp;ffmpeg;</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FFmpeg.AutoGen" Version="4.3.0.3" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.1" />
+  </ItemGroup>
+</Project>

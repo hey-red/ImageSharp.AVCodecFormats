@@ -1,0 +1,25 @@
+﻿using System.Collections.Generic;
+
+using SixLabors.ImageSharp.Formats;
+
+namespace HeyRed.ImageSharp.AVCodecFormats.Avi
+{
+    public sealed class AviFormat : IImageFormat<AviMetadata>
+    {
+        private AviFormat()
+        {
+        }
+
+        public static AviFormat Instance { get; } = new AviFormat();
+
+        public string Name => "AVI";
+
+        public string DefaultMimeType => "video/x-msvideo";
+
+        public IEnumerable<string> MimeTypes => new[] { "video/x-msvideo", };
+
+        public IEnumerable<string> FileExtensions => new[] { "avi" };
+
+        public AviMetadata CreateDefaultFormatMetadata() => new AviMetadata();
+    }
+}
