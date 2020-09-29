@@ -173,12 +173,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 ffmpeg.avcodec_free_context(codecContext);
             }
 
-            // Should i do this?
-            if (_formatContext->pb != null)
-            {
-                ffmpeg.avio_context_free(&_formatContext->pb);
-            }
-
             // avformat_free_context is not required here
             var pFormatContext = _formatContext;
             ffmpeg.avformat_close_input(&pFormatContext);
