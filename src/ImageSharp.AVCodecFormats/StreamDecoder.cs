@@ -130,6 +130,8 @@ namespace HeyRed.ImageSharp.AVCodecFormats
         // TODO: https://github.com/Ruslan-B/FFmpeg.AutoGen/issues/112#issuecomment-491901341
         public AVFrame* DecodeFrame()
         {
+            ffmpeg.av_frame_unref(_frame);
+
             int error;
             do
             {
