@@ -160,11 +160,15 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         public void Dispose()
         {
-            ffmpeg.av_frame_unref(_frame);
-            ffmpeg.av_freep(_frame);
+            fixed (AVFrame** frame = &_frame)
+            {
+                ffmpeg.av_frame_free(frame);
+            }
 
-            ffmpeg.av_packet_unref(_packet);
-            ffmpeg.av_freep(_packet);
+            fixed (AVPacket** packet = &_packet)
+            {
+                ffmpeg.av_packet_free(packet);
+            }
 
             fixed (AVCodecContext** codecContext = &_codecContext)
             {
