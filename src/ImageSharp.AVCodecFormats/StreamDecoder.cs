@@ -160,8 +160,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         public void Dispose()
         {
-            //TODO: ffmpeg.av_freep(_avioBuffer);
-
             ffmpeg.av_frame_unref(_frame);
             ffmpeg.av_freep(_frame);
 
@@ -173,9 +171,10 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 ffmpeg.avcodec_free_context(codecContext);
             }
 
-            // avformat_free_context is not required here
-            var pFormatContext = _formatContext;
-            ffmpeg.avformat_close_input(&pFormatContext);
+            fixed (AVFormatContext** formatContext = &_formatContext)
+            {
+                ffmpeg.avformat_close_input(formatContext);
+            }
         }
     }
 }
