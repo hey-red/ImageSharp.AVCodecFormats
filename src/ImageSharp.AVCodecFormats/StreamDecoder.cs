@@ -8,6 +8,8 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 {
     internal sealed unsafe class StreamDecoder : IDisposable
     {
+        private const int AVIO_CTX_BUFFER_SIZE = 4096;
+
         private readonly Stream _inputStream;
 
         private readonly AVCodecContext* _codecContext;
@@ -16,13 +18,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private readonly int _streamIndex;
 
-        private readonly AVFrame* _frame;
+        private AVFrame* _frame;
 
-        private readonly AVPacket* _packet;
-
-        private const int AVIO_CTX_BUFFER_SIZE = 4096;
-
-        private readonly byte* _avioBuffer;
+        private AVPacket* _packet;
 
         private int ReadPacket(void* opaque, byte* buf, int bufSize)
         {
@@ -77,10 +75,10 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             // Discard frames marked as corrupted
             _formatContext->flags |= ffmpeg.AVFMT_FLAG_DISCARD_CORRUPT;
 
-            _avioBuffer = (byte*)ffmpeg.av_malloc(AVIO_CTX_BUFFER_SIZE);
+            var avioBuffer = (byte*)ffmpeg.av_malloc(AVIO_CTX_BUFFER_SIZE);
 
             _formatContext->pb = ffmpeg.avio_alloc_context(
-                _avioBuffer, AVIO_CTX_BUFFER_SIZE, 0, null,
+                avioBuffer, AVIO_CTX_BUFFER_SIZE, 0, null,
                 (avio_alloc_context_read_packet)ReadPacket, null,
                 (avio_alloc_context_seek)Seek);
             if (_formatContext->pb == null)
@@ -113,24 +111,35 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
             SourceWidth = _codecContext->width;
             SourceHeight = _codecContext->height;
+        }
 
-            _packet = ffmpeg.av_packet_alloc();
-            if (_packet == null)
+        private void InitPackeAndFrame()
+        {
+            if (_packet == null && _frame == null)
             {
-                throw new AVException("Cannot allocate packet.");
+                _packet = ffmpeg.av_packet_alloc();
+                if (_packet == null)
+                {
+                    throw new AVException("Cannot allocate packet.");
+                }
+
+                _frame = ffmpeg.av_frame_alloc();
+                if (_packet == null)
+                {
+                    throw new AVException("Cannot allocate frame.");
+                }
             }
-
-            _frame = ffmpeg.av_frame_alloc();
-            if (_packet == null)
+            else
             {
-                throw new AVException("Cannot allocate frame.");
+                ffmpeg.av_packet_unref(_packet);
+                ffmpeg.av_frame_unref(_frame);
             }
         }
 
         // TODO: https://github.com/Ruslan-B/FFmpeg.AutoGen/issues/112#issuecomment-491901341
         public AVFrame* DecodeFrame()
         {
-            ffmpeg.av_frame_unref(_frame);
+            InitPackeAndFrame();
 
             int error;
             do
