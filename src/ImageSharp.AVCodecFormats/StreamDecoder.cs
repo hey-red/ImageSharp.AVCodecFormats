@@ -115,7 +115,16 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             SourceHeight = _codecContext->height;
 
             _packet = ffmpeg.av_packet_alloc();
+            if (_packet == null)
+            {
+                throw new AVException("Cannot allocate packet.");
+            }
+
             _frame = ffmpeg.av_frame_alloc();
+            if (_packet == null)
+            {
+                throw new AVException("Cannot allocate frame.");
+            }
         }
 
         // TODO: https://github.com/Ruslan-B/FFmpeg.AutoGen/issues/112#issuecomment-491901341
