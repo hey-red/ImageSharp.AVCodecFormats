@@ -168,7 +168,10 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             ffmpeg.av_packet_unref(_packet);
             ffmpeg.av_freep(_packet);
 
-            ffmpeg.avcodec_close(_codecContext);
+            fixed (AVCodecContext** codecContext = &_codecContext)
+            {
+                ffmpeg.avcodec_free_context(codecContext);
+            }
 
             // Should i do this?
             if (_formatContext->pb != null)
