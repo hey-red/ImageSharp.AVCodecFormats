@@ -10,6 +10,7 @@
     <Nullable>enable</Nullable>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Package contains a bunch of ffmpeg-based decoders that allows to extract frames from video and processing it's using ImageSharp.</Description>
+    <PackageReleaseNotes>Added option to detect frames that are completely black.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats</PackageProjectUrl>
     <RepositoryUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
