@@ -8,7 +8,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 {
     internal sealed unsafe class StreamDecoder : IDisposable
     {
-        private const int AVIO_CTX_BUFFER_SIZE = 4096;
+        private const int AVIO_CTX_BUFFER_SIZE = 1024 * 8;
 
         private readonly Stream _inputStream;
 
