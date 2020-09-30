@@ -115,9 +115,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private AVFilterGraph* _filterGraph = null;
 
-        private AVFilterContext* _buffersrcFilterCtx;
-        private AVFilterContext* _buffersinkFilterCtx;
-        private AVFilterContext* _blackFrameFilterCtx;
+        private readonly AVFilterContext* _buffersrcFilterCtx;
+        private readonly AVFilterContext* _buffersinkFilterCtx;
+        private readonly AVFilterContext* _blackFrameFilterCtx;
 
         private void InitFilters()
         {
@@ -135,13 +135,13 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 string srcArgs = $"video_size={_codecContext->width}x{_codecContext->height}:pix_fmt={(int)_codecContext->pix_fmt}:time_base=1/25:pixel_aspect=1/1";
 
                 ffmpeg.avfilter_graph_create_filter(buffersrcCtx, ffmpeg.avfilter_get_by_name("buffer"), "in", srcArgs, null, _filterGraph)
-                .ThrowExceptionIfError();
+                    .ThrowExceptionIfError();
             }
 
             fixed (AVFilterContext** buffersinkCtx = &_buffersinkFilterCtx)
             {
                 ffmpeg.avfilter_graph_create_filter(buffersinkCtx, ffmpeg.avfilter_get_by_name("buffersink"), "out", null, null, _filterGraph)
-                .ThrowExceptionIfError();
+                    .ThrowExceptionIfError();
             }
 
             string args = "amount=98:threshold=32";
@@ -150,7 +150,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             fixed (AVFilterContext** blackFrameCtx = &_blackFrameFilterCtx)
             {
                 ffmpeg.avfilter_graph_create_filter(blackFrameCtx, ffmpeg.avfilter_get_by_name("blackframe"), null, args, null, _filterGraph)
-                .ThrowExceptionIfError();
+                    .ThrowExceptionIfError();
             }
 
             // Link filters
