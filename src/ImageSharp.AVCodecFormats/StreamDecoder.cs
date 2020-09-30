@@ -9,6 +9,8 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 {
     internal sealed unsafe class StreamDecoder : IDisposable
     {
+        private FrameFilter? _frameFilter;
+
         private readonly IAvioStream _inputStream;
 
         private readonly AVCodecContext* _codecContext;
@@ -82,79 +84,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             SourceHeight = _codecContext->height;
         }
 
-        private AVFilterGraph* _filterGraph = null;
-
-        private readonly AVFilterContext* _buffersrcFilterCtx;
-        private readonly AVFilterContext* _buffersinkFilterCtx;
-        private readonly AVFilterContext* _blackFrameFilterCtx;
-
-        private void InitBlackFrameFilter()
-        {
-            _filterGraph = ffmpeg.avfilter_graph_alloc();
-            if (_filterGraph == null)
-            {
-                throw new AVException("Cannot allocate filter graph.");
-            }
-
-            fixed (AVFilterContext** buffersrcCtx = &_buffersrcFilterCtx)
-            {
-                // time_base and pixel_aspect here is incorrect, so set dummy values
-                string srcArgs = $"video_size={_codecContext->width}x{_codecContext->height}:pix_fmt={(int)_codecContext->pix_fmt}:time_base=1/25:pixel_aspect=1/1";
-
-                ffmpeg.avfilter_graph_create_filter(buffersrcCtx, ffmpeg.avfilter_get_by_name("buffer"), "in", srcArgs, null, _filterGraph)
-                    .ThrowExceptionIfError();
-            }
-
-            fixed (AVFilterContext** buffersinkCtx = &_buffersinkFilterCtx)
-            {
-                ffmpeg.avfilter_graph_create_filter(buffersinkCtx, ffmpeg.avfilter_get_by_name("buffersink"), "out", null, null, _filterGraph)
-                    .ThrowExceptionIfError();
-            }
-
-            // Configure black frame filter
-            string args = $"amount={_options.BlackFrameAmount}:threshold={_options.BlackFrameThreshold}";
-
-            // Create blackframe filter
-            fixed (AVFilterContext** blackFrameCtx = &_blackFrameFilterCtx)
-            {
-                ffmpeg.avfilter_graph_create_filter(blackFrameCtx, ffmpeg.avfilter_get_by_name("blackframe"), null, args, null, _filterGraph)
-                    .ThrowExceptionIfError();
-            }
-
-            // Link filters
-            ffmpeg.avfilter_link(_buffersrcFilterCtx, 0, _blackFrameFilterCtx, 0)
-                .ThrowExceptionIfError();
-
-            ffmpeg.avfilter_link(_blackFrameFilterCtx, 0, _buffersinkFilterCtx, 0)
-                .ThrowExceptionIfError();
-
-            ffmpeg.avfilter_graph_config(_filterGraph, null)
-                .ThrowExceptionIfError();
-        }
-
-        private void InitPacketAndFrame()
-        {
-            if (_packet == null && _frame == null)
-            {
-                _packet = ffmpeg.av_packet_alloc();
-                if (_packet == null)
-                {
-                    throw new AVException("Cannot allocate packet.");
-                }
-
-                _frame = ffmpeg.av_frame_alloc();
-                if (_packet == null)
-                {
-                    throw new AVException("Cannot allocate frame.");
-                }
-            }
-            else
-            {
-                ffmpeg.av_packet_unref(_packet);
-                ffmpeg.av_frame_unref(_frame);
-            }
-        }
-
         private bool TryDecodeNextFrame()
         {
             ffmpeg.av_frame_unref(_frame);
@@ -187,6 +116,29 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             return true;
         }
 
+        private void InitPacketAndFrame()
+        {
+            if (_packet == null && _frame == null)
+            {
+                _packet = ffmpeg.av_packet_alloc();
+                if (_packet == null)
+                {
+                    throw new AVException("Cannot allocate packet.");
+                }
+
+                _frame = ffmpeg.av_frame_alloc();
+                if (_packet == null)
+                {
+                    throw new AVException("Cannot allocate frame.");
+                }
+            }
+            else
+            {
+                ffmpeg.av_packet_unref(_packet);
+                ffmpeg.av_frame_unref(_frame);
+            }
+        }
+
         public AVFrame* DecodeFrame()
         {
             InitPacketAndFrame();
@@ -195,9 +147,10 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             if (_options.EnableBlackFrameFilter &&
                 _codecContext->codec_id != AVCodecID.AV_CODEC_ID_MJPEG) // mp3 covers
             {
-                if (_filterGraph == null)
+                // Init filters
+                if (_frameFilter == null)
                 {
-                    InitBlackFrameFilter();
+                    _frameFilter = new FrameFilter(_codecContext, _options);
                 }
 
                 AVDictionaryEntry* blackEntry = null;
@@ -210,12 +163,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                         break;
                     }
 
-                    // Apply filters
-                    ffmpeg.av_buffersrc_add_frame(_buffersrcFilterCtx, _frame)
-                        .ThrowExceptionIfError();
-
-                    ffmpeg.av_buffersink_get_frame(_buffersinkFilterCtx, _frame)
-                        .ThrowExceptionIfError();
+                    _frameFilter.ApplyFilters(_frame);
 
                     blackEntry = ffmpeg.av_dict_get(_frame->metadata, "lavfi.blackframe.pblack", null, 0);
 
@@ -254,10 +202,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 ffmpeg.avformat_close_input(formatContext);
             }
 
-            fixed (AVFilterGraph** filterGraph = &_filterGraph)
-            {
-                ffmpeg.avfilter_graph_free(filterGraph);
-            }
+            _frameFilter?.Dispose();
         }
     }
 }
