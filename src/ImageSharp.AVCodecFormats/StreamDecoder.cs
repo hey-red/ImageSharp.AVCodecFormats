@@ -62,9 +62,12 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         public int SourceHeight { get; }
 
-        public StreamDecoder(Stream inputStream)
+        private readonly IAVDecoderOptions _options;
+
+        public StreamDecoder(Stream inputStream, IAVDecoderOptions? options)
         {
             _inputStream = inputStream;
+            _options = options ?? new AVDecoderOptions();
 
             _formatContext = ffmpeg.avformat_alloc_context();
             if (_formatContext == null)
@@ -119,7 +122,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
         private readonly AVFilterContext* _buffersinkFilterCtx;
         private readonly AVFilterContext* _blackFrameFilterCtx;
 
-        private void InitFilters()
+        private void InitBlackFrameFilter()
         {
             if (_filterGraph != null) return;
 
@@ -144,7 +147,8 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                     .ThrowExceptionIfError();
             }
 
-            string args = "amount=98:threshold=32";
+            // Configure black frame filter
+            string args = $"amount={_options.BlackFrameAmount}:threshold={_options.BlackFrameThreshold}";
 
             // Create blackframe filter
             fixed (AVFilterContext** blackFrameCtx = &_blackFrameFilterCtx)
@@ -187,11 +191,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             }
         }
 
-        // TODO: https://github.com/Ruslan-B/FFmpeg.AutoGen/issues/112#issuecomment-491901341
-        public AVFrame* DecodeFrame()
+        private bool TryDecodeNextFrame()
         {
-            InitPackeAndFrame();
-            InitFilters();
+            ffmpeg.av_frame_unref(_frame);
 
             int error;
             do
@@ -203,7 +205,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                     error = ffmpeg.av_read_frame(_formatContext, _packet);
                     if (error == ffmpeg.AVERROR_EOF)
                     {
-                        break;
+                        return false;
                     }
 
                     error.ThrowExceptionIfError();
@@ -218,12 +220,44 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
             error.ThrowExceptionIfError();
 
-            // Apply filters
-            ffmpeg.av_buffersrc_add_frame(_buffersrcFilterCtx, _frame)
-                .ThrowExceptionIfError();
+            return true;
+        }
 
-            ffmpeg.av_buffersink_get_frame(_buffersinkFilterCtx, _frame)
-                .ThrowExceptionIfError();
+        public AVFrame* DecodeFrame()
+        {
+            InitPackeAndFrame();
+
+            // Processing frame with black frame filter
+            if (_options.EnableBlackFrameFilter)
+            {
+                InitBlackFrameFilter();
+
+                AVDictionaryEntry* blackEntry = null;
+                int decodedFramesCounter = 0;
+                do
+                {
+                    if (!TryDecodeNextFrame())
+                    {
+                        break;
+                    }
+
+                    // Apply filters
+                    ffmpeg.av_buffersrc_add_frame(_buffersrcFilterCtx, _frame)
+                        .ThrowExceptionIfError();
+
+                    ffmpeg.av_buffersink_get_frame(_buffersinkFilterCtx, _frame)
+                        .ThrowExceptionIfError();
+
+                    blackEntry = ffmpeg.av_dict_get(_frame->metadata, "lavfi.blackframe.pblack", null, 0);
+
+                    decodedFramesCounter++;
+                }
+                while (blackEntry != null && decodedFramesCounter <= _options.BlackFramesLimit);
+
+                return _frame;
+            }
+            // Just decode first frame
+            TryDecodeNextFrame();
 
             return _frame;
         }
