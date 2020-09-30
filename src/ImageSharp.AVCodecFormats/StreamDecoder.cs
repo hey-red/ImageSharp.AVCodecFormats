@@ -89,9 +89,11 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 throw new AVException("Cannot allocate AVIOContext.");
             }
 
-            var pFormatContext = _formatContext;
-            ffmpeg.avformat_open_input(&pFormatContext, null, null, null)
-                .ThrowExceptionIfError();
+            fixed (AVFormatContext** formatContext = &_formatContext)
+            {
+                ffmpeg.avformat_open_input(formatContext, null, null, null)
+                    .ThrowExceptionIfError();
+            }
 
             ffmpeg.avformat_find_stream_info(_formatContext, null)
                 .ThrowExceptionIfError();
@@ -107,7 +109,8 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             }
 
             // Copy stream parameters
-            ffmpeg.avcodec_parameters_to_context(_codecContext, _formatContext->streams[_streamIndex]->codecpar);
+            ffmpeg.avcodec_parameters_to_context(_codecContext, _formatContext->streams[_streamIndex]->codecpar)
+                .ThrowExceptionIfError();
 
             ffmpeg.avcodec_open2(_codecContext, codec, null)
                 .ThrowExceptionIfError();
@@ -235,6 +238,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 }
 
                 AVDictionaryEntry* blackEntry = null;
+
                 int decodedFramesCounter = 0;
                 do
                 {
@@ -258,6 +262,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
                 return _frame;
             }
+
             // Just decode first frame
             TryDecodeNextFrame();
 
