@@ -37,30 +37,11 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private long Seek(void* opaque, long offset, int whence)
         {
-            // AVSEEK_SIZE
-            if (whence == 0x10000)
-            {
-                if (_inputStream is MemoryStream)
-                {
-                    return _inputStream.Length;
-                }
-                return -1;
-            }
-            if (!_inputStream.CanSeek)
-            {
-                return -1;
-            }
+            if (!_inputStream.CanSeek) return -1;
 
-            return whence switch
-            {
-                // SEEK_SET
-                0 => _inputStream.Seek(offset, SeekOrigin.Begin),
-                // SEEK_CUR
-                1 => _inputStream.Seek(offset, SeekOrigin.Current),
-                // SEEK_END
-                2 => _inputStream.Seek(offset, SeekOrigin.End),
-                _ => -1,
-            };
+            return whence == ffmpeg.AVSEEK_SIZE ?
+                _inputStream.Length :
+                _inputStream.Seek(offset, SeekOrigin.Begin);
         }
 
         public int SourceWidth { get; }
