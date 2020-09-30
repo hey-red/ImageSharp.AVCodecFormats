@@ -1,16 +1,14 @@
 ﻿using System;
-using System.IO;
-using System.Runtime.InteropServices;
 
 using FFmpeg.AutoGen;
+
+using HeyRed.ImageSharp.AVCodecFormats.IO;
 
 namespace HeyRed.ImageSharp.AVCodecFormats
 {
     internal sealed unsafe class StreamDecoder : IDisposable
     {
-        private const int AVIO_CTX_BUFFER_SIZE = 1024 * 8;
-
-        private readonly Stream _inputStream;
+        private readonly IAvioStream _inputStream;
 
         private readonly AVCodecContext* _codecContext;
 
@@ -22,35 +20,13 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private AVPacket* _packet;
 
-        private readonly byte[] _readBuffer = new byte[AVIO_CTX_BUFFER_SIZE];
-
-        // TODO: bench with span
-        private int ReadPacket(void* opaque, byte* buf, int bufSize)
-        {
-            int readed = _inputStream.Read(_readBuffer, 0, _readBuffer.Length);
-            if (readed > 0)
-            {
-                Marshal.Copy(_readBuffer, 0, (IntPtr)buf, readed);
-            }
-            return readed;
-        }
-
-        private long Seek(void* opaque, long offset, int whence)
-        {
-            if (!_inputStream.CanSeek) return -1;
-
-            return whence == ffmpeg.AVSEEK_SIZE ?
-                _inputStream.Length :
-                _inputStream.Seek(offset, SeekOrigin.Begin);
-        }
-
         public int SourceWidth { get; }
 
         public int SourceHeight { get; }
 
         private readonly IAVDecoderOptions _options;
 
-        public StreamDecoder(Stream inputStream, IAVDecoderOptions? options)
+        public StreamDecoder(IAvioStream inputStream, IAVDecoderOptions? options)
         {
             _inputStream = inputStream;
             _options = options ?? new AVDecoderOptions();
@@ -64,12 +40,12 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             // Discard frames marked as corrupted
             _formatContext->flags |= ffmpeg.AVFMT_FLAG_DISCARD_CORRUPT;
 
-            var avioBuffer = (byte*)ffmpeg.av_malloc(AVIO_CTX_BUFFER_SIZE);
+            var avioBuffer = (byte*)ffmpeg.av_malloc((ulong)_inputStream.ReadBufferLength);
 
             _formatContext->pb = ffmpeg.avio_alloc_context(
-                avioBuffer, AVIO_CTX_BUFFER_SIZE, 0, null,
-                (avio_alloc_context_read_packet)ReadPacket, null,
-                (avio_alloc_context_seek)Seek);
+                avioBuffer, _inputStream.ReadBufferLength, 0, null,
+                (avio_alloc_context_read_packet)_inputStream.Read, null,
+                (avio_alloc_context_seek)_inputStream.Seek);
             if (_formatContext->pb == null)
             {
                 throw new AVException("Cannot allocate AVIOContext.");

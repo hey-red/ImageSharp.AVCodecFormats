@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 using FFmpeg.AutoGen;
 
+using HeyRed.ImageSharp.AVCodecFormats.IO;
+
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
@@ -36,7 +38,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
         {
-            using var streamDecoder = new StreamDecoder(stream, DecoderOptions);
+            using var streamDecoder = new StreamDecoder(new AvioStream(stream), DecoderOptions);
             AVFrame* frame = streamDecoder.DecodeFrame();
 
             using var frameResampler = new FrameResampler(frame->width, frame->height, (AVPixelFormat)frame->format,
@@ -85,7 +87,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
         {
             try
             {
-                using var streamDecoder = new StreamDecoder(stream, DecoderOptions);
+                using var streamDecoder = new StreamDecoder(new AvioStream(stream), DecoderOptions);
 
                 return new ImageInfo(
                     streamDecoder.SourceWidth,
