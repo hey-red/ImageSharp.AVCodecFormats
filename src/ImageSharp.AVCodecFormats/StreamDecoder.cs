@@ -22,11 +22,16 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private AVPacket* _packet;
 
+        private readonly byte[] _readBuffer = new byte[AVIO_CTX_BUFFER_SIZE];
+
+        // TODO: bench with span
         private int ReadPacket(void* opaque, byte* buf, int bufSize)
         {
-            byte[] tempBuf = new byte[bufSize];
-            int readed = _inputStream.Read(tempBuf, 0, bufSize);
-            Marshal.Copy(tempBuf, 0, (IntPtr)buf, readed);
+            int readed = _inputStream.Read(_readBuffer, 0, _readBuffer.Length);
+            if (readed > 0)
+            {
+                Marshal.Copy(_readBuffer, 0, (IntPtr)buf, readed);
+            }
             return readed;
         }
 
