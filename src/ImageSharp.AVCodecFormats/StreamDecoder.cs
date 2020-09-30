@@ -166,7 +166,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 .ThrowExceptionIfError();
         }
 
-        private void InitPackeAndFrame()
+        private void InitPacketAndFrame()
         {
             if (_packet == null && _frame == null)
             {
@@ -223,7 +223,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         public AVFrame* DecodeFrame()
         {
-            InitPackeAndFrame();
+            InitPacketAndFrame();
 
             // Processing frame with black frame filter
             if (_options.EnableBlackFrameFilter &&
