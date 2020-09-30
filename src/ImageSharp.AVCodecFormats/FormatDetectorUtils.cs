@@ -4,7 +4,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 {
     internal static class FormatDetectorUtils
     {
-        // TODO: should contains video
         public static bool IsMkvOrWebmHeader(ReadOnlySpan<byte> headerSpan)
         {
             return
