@@ -69,7 +69,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             _formatContext = ffmpeg.avformat_alloc_context();
             if (_formatContext == null)
             {
-                throw new InvalidOperationException("Cannot allocate FormatContext.");
+                throw new AVException("Cannot allocate FormatContext.");
             }
 
             // Discard frames marked as corrupted
@@ -83,7 +83,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 (avio_alloc_context_seek)Seek);
             if (_formatContext->pb == null)
             {
-                throw new InvalidOperationException("Cannot allocate AVIOContext.");
+                throw new AVException("Cannot allocate AVIOContext.");
             }
 
             var pFormatContext = _formatContext;
@@ -100,7 +100,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             _codecContext = ffmpeg.avcodec_alloc_context3(codec);
             if (_codecContext == null)
             {
-                throw new InvalidOperationException("Cannot allocate codec context.");
+                throw new AVException("Cannot allocate codec context.");
             }
 
             // Copy stream parameters
@@ -111,6 +111,57 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
             SourceWidth = _codecContext->width;
             SourceHeight = _codecContext->height;
+        }
+
+        private AVFilterGraph* _filterGraph = null;
+
+        private AVFilterContext* _buffersrcFilterCtx;
+        private AVFilterContext* _buffersinkFilterCtx;
+        private AVFilterContext* _blackFrameFilterCtx;
+
+        private void InitFilters()
+        {
+            if (_filterGraph != null) return;
+
+            _filterGraph = ffmpeg.avfilter_graph_alloc();
+            if (_filterGraph == null)
+            {
+                throw new AVException("Cannot allocate filter graph.");
+            }
+
+            fixed (AVFilterContext** buffersrcCtx = &_buffersrcFilterCtx)
+            {
+                // time_base and pixel_aspect here is incorrect, so set dummy values
+                string srcArgs = $"video_size={_codecContext->width}x{_codecContext->height}:pix_fmt={(int)_codecContext->pix_fmt}:time_base=1/25:pixel_aspect=1/1";
+
+                ffmpeg.avfilter_graph_create_filter(buffersrcCtx, ffmpeg.avfilter_get_by_name("buffer"), "in", srcArgs, null, _filterGraph)
+                .ThrowExceptionIfError();
+            }
+
+            fixed (AVFilterContext** buffersinkCtx = &_buffersinkFilterCtx)
+            {
+                ffmpeg.avfilter_graph_create_filter(buffersinkCtx, ffmpeg.avfilter_get_by_name("buffersink"), "out", null, null, _filterGraph)
+                .ThrowExceptionIfError();
+            }
+
+            string args = "amount=98:threshold=32";
+
+            // Create blackframe filter
+            fixed (AVFilterContext** blackFrameCtx = &_blackFrameFilterCtx)
+            {
+                ffmpeg.avfilter_graph_create_filter(blackFrameCtx, ffmpeg.avfilter_get_by_name("blackframe"), null, args, null, _filterGraph)
+                .ThrowExceptionIfError();
+            }
+
+            // Link filters
+            ffmpeg.avfilter_link(_buffersrcFilterCtx, 0, _blackFrameFilterCtx, 0)
+                .ThrowExceptionIfError();
+
+            ffmpeg.avfilter_link(_blackFrameFilterCtx, 0, _buffersinkFilterCtx, 0)
+                .ThrowExceptionIfError();
+
+            ffmpeg.avfilter_graph_config(_filterGraph, null)
+                .ThrowExceptionIfError();
         }
 
         private void InitPackeAndFrame()
@@ -140,6 +191,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
         public AVFrame* DecodeFrame()
         {
             InitPackeAndFrame();
+            InitFilters();
 
             int error;
             do
@@ -151,7 +203,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                     error = ffmpeg.av_read_frame(_formatContext, _packet);
                     if (error == ffmpeg.AVERROR_EOF)
                     {
-                        return _frame;
+                        break;
                     }
 
                     error.ThrowExceptionIfError();
@@ -165,6 +217,13 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             while (error == ffmpeg.AVERROR(ffmpeg.EAGAIN));
 
             error.ThrowExceptionIfError();
+
+            // Apply filters
+            ffmpeg.av_buffersrc_add_frame(_buffersrcFilterCtx, _frame)
+                .ThrowExceptionIfError();
+
+            ffmpeg.av_buffersink_get_frame(_buffersinkFilterCtx, _frame)
+                .ThrowExceptionIfError();
 
             return _frame;
         }
@@ -189,6 +248,11 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             fixed (AVFormatContext** formatContext = &_formatContext)
             {
                 ffmpeg.avformat_close_input(formatContext);
+            }
+
+            fixed (AVFilterGraph** filterGraph = &_filterGraph)
+            {
+                ffmpeg.avfilter_graph_free(filterGraph);
             }
         }
     }

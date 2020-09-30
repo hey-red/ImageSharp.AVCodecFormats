@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,10 +33,19 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             }
         }
 
+        private const string BLACKFRAME_KEY = "lavfi.blackframe.pblack";
+
         public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
         {
             using var streamDecoder = new StreamDecoder(stream);
             AVFrame* frame = streamDecoder.DecodeFrame();
+
+            AVDictionaryEntry* blackEntry = ffmpeg.av_dict_get(frame->metadata, BLACKFRAME_KEY, null, 0);
+            if (blackEntry != null)
+            {
+                string pblackValue = Marshal.PtrToStringAnsi((IntPtr)blackEntry->value);
+                Console.WriteLine($"{BLACKFRAME_KEY}: {pblackValue}");
+            }
 
             using var frameResampler = new FrameResampler(frame->width, frame->height, (AVPixelFormat)frame->format,
                 // FIXME: Some formats can be mapped incorrectly
