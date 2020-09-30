@@ -2,6 +2,8 @@
 
 using FFmpeg.AutoGen;
 
+using HeyRed.ImageSharp.AVCodecFormats.Common;
+
 namespace HeyRed.ImageSharp.AVCodecFormats
 {
     internal sealed unsafe class FrameResampler : IDisposable

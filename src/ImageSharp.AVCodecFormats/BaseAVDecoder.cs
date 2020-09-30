@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using FFmpeg.AutoGen;
 
+using HeyRed.ImageSharp.AVCodecFormats.Common;
 using HeyRed.ImageSharp.AVCodecFormats.IO;
 
 using SixLabors.ImageSharp;

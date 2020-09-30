@@ -2,6 +2,7 @@
 
 using FFmpeg.AutoGen;
 
+using HeyRed.ImageSharp.AVCodecFormats.Common;
 using HeyRed.ImageSharp.AVCodecFormats.IO;
 
 namespace HeyRed.ImageSharp.AVCodecFormats

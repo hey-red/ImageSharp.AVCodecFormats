@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace HeyRed.ImageSharp.AVCodecFormats
+namespace HeyRed.ImageSharp.AVCodecFormats.Common
 {
     public class AVException : Exception
     {

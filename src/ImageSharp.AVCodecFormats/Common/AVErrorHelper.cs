@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 using FFmpeg.AutoGen;
 
-namespace HeyRed.ImageSharp.AVCodecFormats
+namespace HeyRed.ImageSharp.AVCodecFormats.Common
 {
     internal static class AVErrorHelper
     {
