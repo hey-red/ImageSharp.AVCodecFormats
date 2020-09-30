@@ -124,8 +124,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private void InitBlackFrameFilter()
         {
-            if (_filterGraph != null) return;
-
             _filterGraph = ffmpeg.avfilter_graph_alloc();
             if (_filterGraph == null)
             {
@@ -228,9 +226,13 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             InitPackeAndFrame();
 
             // Processing frame with black frame filter
-            if (_options.EnableBlackFrameFilter)
+            if (_options.EnableBlackFrameFilter &&
+                _codecContext->codec_id != AVCodecID.AV_CODEC_ID_MJPEG) // mp3 covers
             {
-                InitBlackFrameFilter();
+                if (_filterGraph == null)
+                {
+                    InitBlackFrameFilter();
+                }
 
                 AVDictionaryEntry* blackEntry = null;
                 int decodedFramesCounter = 0;
