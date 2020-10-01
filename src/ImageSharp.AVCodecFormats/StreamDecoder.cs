@@ -145,7 +145,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
             // Processing frame with black frame filter
             if (_options.EnableBlackFrameFilter &&
-                _codecContext->codec_id != AVCodecID.AV_CODEC_ID_MJPEG) // mp3 covers
+                // Skip mp3 covers
+                _codecContext->codec_id != AVCodecID.AV_CODEC_ID_MJPEG &&
+                _codecContext->codec_id != AVCodecID.AV_CODEC_ID_PNG)
             {
                 // Init filters
                 if (_frameFilter == null)
