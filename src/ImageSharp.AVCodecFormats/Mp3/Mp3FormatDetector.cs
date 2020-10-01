@@ -9,7 +9,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp3
     {
         private static readonly byte[] _picMarker = Encoding.ASCII.GetBytes("PIC");
 
-        public int HeaderSize => 50;
+        public int HeaderSize => 1024;
 
         public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
         {

@@ -41,7 +41,7 @@ namespace ImageSharp.AVCodecFormats.Tests
         [InlineData("mpeg4.wmv", 640, 360)]
         [InlineData("vp9.webm", 1280, 720)]
         [InlineData("vp8.webm", 344, 360)]
-        [InlineData("mpga.mp3", 600, 600)]
+        [InlineData("mpga.mp3", 700, 700)]
         public void IdentifyVideoTest(string fileName, int width, int height)
         {
             string filePath = Path.Combine(_testVideoDataPath, fileName);
@@ -69,7 +69,7 @@ namespace ImageSharp.AVCodecFormats.Tests
         [InlineData("mpeg4.wmv", 640, 360, 200, 112)]
         [InlineData("vp9.webm", 1280, 720, 200, 112)]
         [InlineData("vp8.webm", 344, 360, 191, 200)]
-        [InlineData("mpga.mp3", 600, 600, 200, 200)]
+        [InlineData("mpga.mp3", 700, 700, 200, 200)]
         public void ThumbnailVideoTest(
             string fileName,
             int width, int height,
