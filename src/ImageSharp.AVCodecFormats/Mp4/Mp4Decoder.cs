@@ -5,5 +5,9 @@
         public Mp4Decoder() : base()
         {
         }
+
+        public Mp4Decoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
+        {
+        }
     }
 }

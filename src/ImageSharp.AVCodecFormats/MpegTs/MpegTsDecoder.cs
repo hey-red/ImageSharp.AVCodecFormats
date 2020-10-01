@@ -5,5 +5,9 @@
         public MpegTsDecoder() : base()
         {
         }
+
+        public MpegTsDecoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
+        {
+        }
     }
 }

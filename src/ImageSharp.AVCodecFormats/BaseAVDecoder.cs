@@ -20,6 +20,11 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private static bool _initBinaries = false;
 
+        protected BaseAVDecoder(IAVDecoderOptions decoderOptions) : this()
+        {
+            _decoderOptions = decoderOptions ?? throw new ArgumentNullException(nameof(decoderOptions));
+        }
+
         protected BaseAVDecoder()
         {
             if (_initBinaries) return;
@@ -35,11 +40,11 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             }
         }
 
-        public AVDecoderOptions? DecoderOptions;
+        private IAVDecoderOptions? _decoderOptions;
 
         public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
         {
-            using var streamDecoder = new StreamDecoder(new AvioStream(stream), DecoderOptions);
+            using var streamDecoder = new StreamDecoder(new AvioStream(stream), _decoderOptions);
             AVFrame* frame = streamDecoder.DecodeFrame();
 
             using var frameResampler = new FrameResampler(frame->width, frame->height, (AVPixelFormat)frame->format,
@@ -88,7 +93,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
         {
             try
             {
-                using var streamDecoder = new StreamDecoder(new AvioStream(stream), DecoderOptions);
+                using var streamDecoder = new StreamDecoder(new AvioStream(stream), _decoderOptions);
 
                 return new ImageInfo(
                     streamDecoder.SourceWidth,

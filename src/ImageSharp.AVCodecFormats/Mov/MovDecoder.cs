@@ -5,5 +5,9 @@
         public MovDecoder() : base()
         {
         }
+
+        public MovDecoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
+        {
+        }
     }
 }

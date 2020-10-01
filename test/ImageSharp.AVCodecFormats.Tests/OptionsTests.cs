@@ -27,10 +27,9 @@ namespace ImageSharp.AVCodecFormats.Tests
         {
             string filePath = Path.Combine(_testVideoDataPath, "black_frame.mp4");
 
-            _configuration.ImageFormatsManager.SetDecoder(Mp4Format.Instance, new Mp4Decoder()
-            {
-                DecoderOptions = new AVDecoderOptions { EnableBlackFrameFilter = true, }
-            });
+            var options = new AVDecoderOptions { EnableBlackFrameFilter = true };
+
+            _configuration.ImageFormatsManager.SetDecoder(Mp4Format.Instance, new Mp4Decoder(options));
 
             using var inputStream = File.OpenRead(filePath);
             using var image = Image.Load<Rgba32>(_configuration, inputStream);
@@ -43,10 +42,9 @@ namespace ImageSharp.AVCodecFormats.Tests
         {
             string filePath = Path.Combine(_testVideoDataPath, "black_frame.mp4");
 
-            _configuration.ImageFormatsManager.SetDecoder(Mp4Format.Instance, new Mp4Decoder()
-            {
-                DecoderOptions = new AVDecoderOptions { EnableBlackFrameFilter = false, }
-            });
+            var options = new AVDecoderOptions { EnableBlackFrameFilter = false };
+
+            _configuration.ImageFormatsManager.SetDecoder(Mp4Format.Instance, new Mp4Decoder(options));
 
             using var inputStream = File.OpenRead(filePath);
             using var image = Image.Load<Rgba32>(_configuration, inputStream);

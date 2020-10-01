@@ -5,5 +5,9 @@
         public MkvDecoder() : base()
         {
         }
+
+        public MkvDecoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
+        {
+        }
     }
 }

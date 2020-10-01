@@ -5,5 +5,9 @@
         public WmvDecoder() : base()
         {
         }
+
+        public WmvDecoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
+        {
+        }
     }
 }

@@ -5,5 +5,9 @@
         public Mp3Decoder() : base()
         {
         }
+
+        public Mp3Decoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
+        {
+        }
     }
 }

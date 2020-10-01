@@ -5,5 +5,9 @@
         public AviDecoder() : base()
         {
         }
+
+        public AviDecoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
+        {
+        }
     }
 }

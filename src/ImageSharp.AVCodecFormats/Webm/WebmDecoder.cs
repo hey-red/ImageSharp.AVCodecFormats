@@ -5,5 +5,9 @@
         public WebmDecoder() : base()
         {
         }
+
+        public WebmDecoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
+        {
+        }
     }
 }
