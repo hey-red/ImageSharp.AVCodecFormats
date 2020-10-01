@@ -2,14 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
-using HeyRed.ImageSharp.AVCodecFormats.Avi;
-using HeyRed.ImageSharp.AVCodecFormats.Mkv;
-using HeyRed.ImageSharp.AVCodecFormats.Mov;
-using HeyRed.ImageSharp.AVCodecFormats.Mp3;
-using HeyRed.ImageSharp.AVCodecFormats.Mp4;
-using HeyRed.ImageSharp.AVCodecFormats.MpegTs;
-using HeyRed.ImageSharp.AVCodecFormats.Webm;
-using HeyRed.ImageSharp.AVCodecFormats.Wmv;
+using HeyRed.ImageSharp.AVCodecFormats;
 
 using SixLabors.ImageSharp;
 
@@ -33,14 +26,6 @@ namespace ImageSharp.AVCodecFormats.Tests
             return Path.Combine(directoryInfo.FullName, TEST_DIR);
         }
 
-        public static Configuration GetImageSharpConfiguration() => new Configuration(
-            new AviConfigurationModule(),
-            new MkvConfigurationModule(),
-            new MovConfigurationModule(),
-            new Mp4ConfigurationModule(),
-            new WebmConfigurationModule(),
-            new WmvConfigurationModule(),
-            new MpegTsConfigurationModule(),
-            new Mp3ConfigurationModule());
+        public static Configuration GetImageSharpConfiguration() => new Configuration().WithAVDecoders();
     }
 }
