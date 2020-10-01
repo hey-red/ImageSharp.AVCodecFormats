@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HeyRed.ImageSharp.AVCodecFormats
+namespace HeyRed.ImageSharp.AVCodecFormats.Common
 {
     internal static class FormatDetectorUtils
     {

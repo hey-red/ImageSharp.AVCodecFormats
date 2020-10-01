@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Text;
 
+using HeyRed.ImageSharp.AVCodecFormats.Common;
+
 using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Mkv
