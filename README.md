@@ -17,11 +17,11 @@ PM> Install-Package ImageSharp.AVCodecFormats.Native.win-x64
 PM> Install-Package ImageSharp.AVCodecFormats.Native.linux-x64
 ```
 
-Without native packages you should provide your own shared FFmpeg build and set path to libs:
+Without native packages you should provide your own shared FFmpeg build and set path:
 
 `ffmpeg.RootPath = "/path/to/native/binaries"`
 
-On linux you can install FFmpeg(4.3.x) from your package manager, but I have no guarantees that it will work as expected.
+On Linux you have another way to get native libs. Just install ffmpeg from your package manager, but I have no guarantees that it will work as expected.
 
 ## Usage
 
@@ -32,17 +32,12 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 
-// Import decoders
-using HeyRed.ImageSharp.AVCodecFormats.Avi;
-using HeyRed.ImageSharp.AVCodecFormats.Mkv;
-using HeyRed.ImageSharp.AVCodecFormats.Mov;
-using HeyRed.ImageSharp.AVCodecFormats.Mp3;
-using HeyRed.ImageSharp.AVCodecFormats.Mp4;
-using HeyRed.ImageSharp.AVCodecFormats.MpegTs;
-using HeyRed.ImageSharp.AVCodecFormats.Webm;
-using HeyRed.ImageSharp.AVCodecFormats.Wmv;
+using HeyRed.ImageSharp.AVCodecFormats;
 
-// Create your custom configuration with required decoders
+// Create custom configuration with all available decoders
+var configuration = new Configuration().WithAVDecoders(); // With options WithAVDecoders(options)
+
+// Or only required decoders
 var configuration = new Configuration(
     new AviConfigurationModule(),
     new MkvConfigurationModule(),
@@ -73,7 +68,7 @@ mp4, webm, avi, mkv, mov, ts, wmv, mp3(extract cover image).
 ## Supported codecs
 [Native package](https://www.nuget.org/packages/ImageSharp.AVCodecFormats.Native) provides codecs listed below:
 
-H263, H264, VP8, VP9, AV1, MPEG-4, MJPEG, MS MPEG4(v1,v2,v3), WMV(v1,v2,v3), VC-1, MPEG-1 Audio Layer 3.
+H263, H264, VP8, VP9, AV1, MPEG-4, MJPEG, PNG, MS MPEG4(v1,v2,v3), WMV(v1,v2,v3), VC-1, MPEG-1 Audio Layer 3.
 
 ## License
 [MIT](LICENSE)
