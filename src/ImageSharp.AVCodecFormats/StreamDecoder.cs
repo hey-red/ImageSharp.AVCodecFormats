@@ -23,9 +23,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private AVPacket* _packet;
 
-        public int SourceWidth { get; }
+        public int SourceWidth => _codecContext->width;
 
-        public int SourceHeight { get; }
+        public int SourceHeight => _codecContext->height;
 
         private readonly IAVDecoderOptions _options;
 
@@ -79,9 +79,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
             ffmpeg.avcodec_open2(_codecContext, codec, null)
                 .ThrowExceptionIfError();
-
-            SourceWidth = _codecContext->width;
-            SourceHeight = _codecContext->height;
         }
 
         private bool TryDecodeNextFrame()
