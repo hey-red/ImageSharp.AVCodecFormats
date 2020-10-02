@@ -10,7 +10,10 @@
     <Nullable>enable</Nullable>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Package contains a bunch of ffmpeg-based decoders that allows to extract frames from video and processing it's using ImageSharp.</Description>
-    <PackageReleaseNotes>Improve mp3 detection/handle png covers.</PackageReleaseNotes>
+    <PackageReleaseNotes>
+      * Decoder constructor with options.
+      * Configuration extensions.
+    </PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats</PackageProjectUrl>
     <RepositoryUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
