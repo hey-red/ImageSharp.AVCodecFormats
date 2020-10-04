@@ -40,7 +40,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             }
         }
 
-        private IAVDecoderOptions? _decoderOptions;
+        private readonly IAVDecoderOptions? _decoderOptions;
 
         public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
         {
