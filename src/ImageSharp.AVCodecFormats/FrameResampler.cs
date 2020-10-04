@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 using FFmpeg.AutoGen;
 
@@ -17,8 +18,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
         private readonly AVPixelFormat _destinationPixelFormat;
 
         private readonly SwsContext* _scaleContext;
-
-        private AVFrame* _destFrame;
 
         public int BufferSize { get; private set; }
 
@@ -45,50 +44,48 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             {
                 throw new AVException("Could not initialize the conversion context.");
             }
+
+            BufferSize = ffmpeg.av_image_get_buffer_size(destinationPixelFormat, _frameWidth, _frameHeight, LINESIZE_ALIGNMENT);
+
+            _bufferPtr = Marshal.AllocHGlobal(BufferSize);
+            _dstData = new byte_ptrArray4();
+            _dstLinesize = new int_array4();
+
+            ffmpeg.av_image_fill_arrays(ref _dstData, ref _dstLinesize, (byte*)_bufferPtr, destinationPixelFormat, _frameWidth, _frameHeight, LINESIZE_ALIGNMENT);
         }
 
-        public AVFrame* Resample(AVFrame* sourceFrame)
+        private readonly IntPtr _bufferPtr;
+
+        private readonly byte_ptrArray4 _dstData;
+
+        private readonly int_array4 _dstLinesize;
+
+        public AVFrame Resample(AVFrame* sourceFrame)
         {
-            _destFrame = ffmpeg.av_frame_alloc();
-
-            var dstData = new byte_ptrArray4();
-            var dstStride = new int_array4();
-
-            BufferSize = ffmpeg.av_image_alloc(
-                ref dstData,
-                ref dstStride,
-                _frameWidth,
-                _frameHeight,
-                _destinationPixelFormat,
-                LINESIZE_ALIGNMENT)
-                .ThrowExceptionIfError();
-
             ffmpeg.sws_scale(
                 _scaleContext,
                 sourceFrame->data,
                 sourceFrame->linesize,
                 0,
                 sourceFrame->height,
-                dstData,
-                dstStride)
+                _dstData,
+                _dstLinesize)
                 .ThrowExceptionIfError();
 
-            _destFrame->data.UpdateFrom(dstData);
-            _destFrame->linesize.UpdateFrom(dstStride);
-            _destFrame->width = _frameWidth;
-            _destFrame->height = _frameHeight;
-            _destFrame->format = (int)_destinationPixelFormat;
+            var frame = new AVFrame();
 
-            return _destFrame;
+            frame.data.UpdateFrom(_dstData);
+            frame.linesize.UpdateFrom(_dstLinesize);
+            frame.width = _frameWidth;
+            frame.height = _frameHeight;
+            frame.format = (int)_destinationPixelFormat;
+
+            return frame;
         }
 
         public void Dispose()
         {
-            fixed (AVFrame** dframe = &_destFrame)
-            {
-                ffmpeg.av_frame_free(dframe);
-            }
-
+            Marshal.FreeHGlobal(_bufferPtr);
             ffmpeg.sws_freeContext(_scaleContext);
         }
     }

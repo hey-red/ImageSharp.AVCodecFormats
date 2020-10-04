@@ -63,11 +63,11 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                     _ => throw new ArgumentException("Invalid pixel format."),
                 });
 
-            AVFrame* resampledFrame = frameResampler.Resample(frame);
+            AVFrame resampledFrame = frameResampler.Resample(frame);
 
-            var bytes = new Span<byte>(resampledFrame->data[0], frameResampler.BufferSize);
+            var bytes = new Span<byte>(resampledFrame.data[0], frameResampler.BufferSize);
 
-            return Image.LoadPixelData<TPixel>(bytes, resampledFrame->width, resampledFrame->height);
+            return Image.LoadPixelData<TPixel>(bytes, resampledFrame.width, resampledFrame.height);
         }
 
         public virtual Task<Image<TPixel>> DecodeAsync<TPixel>(Configuration configuration, Stream stream, CancellationToken cancellationToken)
