@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <Authors>red</Authors>
     <RootNamespace>HeyRed.ImageSharp.AVCodecFormats</RootNamespace>
     <LangVersion>latest</LangVersion>
@@ -10,10 +10,7 @@
     <Nullable>enable</Nullable>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Package contains a bunch of ffmpeg-based decoders that allows to extract frames from video and processing it's using ImageSharp.</Description>
-    <PackageReleaseNotes>
-      * Decoder constructor with options.
-      * Configuration extensions.
-    </PackageReleaseNotes>
+    <PackageReleaseNotes>Fix memory leak</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats</PackageProjectUrl>
     <RepositoryUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
