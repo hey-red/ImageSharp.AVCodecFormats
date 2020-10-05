@@ -1,5 +1,7 @@
 ﻿using System;
 
+using HeyRed.ImageSharp.AVCodecFormats.Common;
+
 using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Mov
@@ -18,13 +20,10 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mov
 
         private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
         {
-            if (header.Length >= HeaderSize)
+            if (header.Length >= HeaderSize &&
+                FormatDetectorUtils.IsMp4OrMovHeader(header.Slice(4)))
             {
                 return
-                    header[4] == 0x66 &&    // f
-                    header[5] == 0x74 &&    // t
-                    header[6] == 0x79 &&    // y
-                    header[7] == 0x70 &&    // p
                     header[8] == 0x71 &&    // q
                     header[9] == 0x74;      // t
             }
