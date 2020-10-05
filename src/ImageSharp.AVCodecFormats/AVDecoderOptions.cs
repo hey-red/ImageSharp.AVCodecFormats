@@ -45,7 +45,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             {
                 if (value <= 0)
                 {
-                    throw new ArgumentException("FramesLimit should be greater or equal 0,");
+                    throw new ArgumentException("FramesLimit should be greater or equal 0.");
                 }
                 _blackFramesLimit = value;
             }
