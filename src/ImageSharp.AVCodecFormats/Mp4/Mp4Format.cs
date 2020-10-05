@@ -16,7 +16,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp4
 
         public string DefaultMimeType => "video/mp4";
 
-        public IEnumerable<string> MimeTypes => new[] { "video/mp4", "audio/mp4", "application/mp4" };
+        public IEnumerable<string> MimeTypes => new[] { "video/mp4", "application/mp4" };
 
         public IEnumerable<string> FileExtensions => new[] { "mp4" };
 
