@@ -8,7 +8,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp4
 {
     public sealed class Mp4FormatDetector : IImageFormatDetector
     {
-        public int HeaderSize => 8;
+        public int HeaderSize => 12;
 
         public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
         {
