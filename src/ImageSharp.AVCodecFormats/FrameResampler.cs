@@ -9,7 +9,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 {
     internal sealed unsafe class FrameResampler : IDisposable
     {
-        private const int LINESIZE_ALIGNMENT = 32;
+        private const int LINESIZE_ALIGNMENT = 1;
 
         private readonly SwsContext* _scaleContext;
 
