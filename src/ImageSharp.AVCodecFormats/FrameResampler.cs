@@ -11,15 +11,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats
     {
         private const int LINESIZE_ALIGNMENT = 32;
 
-        private readonly int _frameWidth;
-
-        private readonly int _frameHeight;
-
-        private readonly AVPixelFormat _destinationPixelFormat;
-
         private readonly SwsContext* _scaleContext;
 
-        public int BufferSize { get; private set; }
+        private readonly int _bufferSize;
 
         public FrameResampler(
             int frameWidth,
@@ -27,31 +21,27 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             AVPixelFormat sourcePixelFormat,
             AVPixelFormat destinationPixelFormat)
         {
-            _frameWidth = frameWidth;
-            _frameHeight = frameHeight;
-            _destinationPixelFormat = destinationPixelFormat;
+            _scaleContext = ffmpeg.sws_getContext(
 
-            _scaleContext = ffmpeg.sws_getCachedContext(
-                _scaleContext,
-                _frameWidth,
-                _frameHeight,
+                frameWidth,
+                frameHeight,
                 sourcePixelFormat,
-                _frameWidth,
-                _frameHeight,
-                _destinationPixelFormat,
+                frameWidth,
+                frameHeight,
+                destinationPixelFormat,
                 ffmpeg.SWS_BICUBIC, null, null, null);
             if (_scaleContext == null)
             {
                 throw new AVException("Could not initialize the conversion context.");
             }
 
-            BufferSize = ffmpeg.av_image_get_buffer_size(destinationPixelFormat, _frameWidth, _frameHeight, LINESIZE_ALIGNMENT);
+            _bufferSize = ffmpeg.av_image_get_buffer_size(destinationPixelFormat, frameWidth, frameHeight, LINESIZE_ALIGNMENT);
 
-            _bufferPtr = Marshal.AllocHGlobal(BufferSize);
+            _bufferPtr = Marshal.AllocHGlobal(_bufferSize);
             _dstData = new byte_ptrArray4();
             _dstLinesize = new int_array4();
 
-            ffmpeg.av_image_fill_arrays(ref _dstData, ref _dstLinesize, (byte*)_bufferPtr, destinationPixelFormat, _frameWidth, _frameHeight, LINESIZE_ALIGNMENT);
+            ffmpeg.av_image_fill_arrays(ref _dstData, ref _dstLinesize, (byte*)_bufferPtr, destinationPixelFormat, frameWidth, frameHeight, LINESIZE_ALIGNMENT);
         }
 
         private readonly IntPtr _bufferPtr;
@@ -60,7 +50,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private readonly int_array4 _dstLinesize;
 
-        public AVFrame Resample(AVFrame* sourceFrame)
+        public Span<byte> Resample(AVFrame* sourceFrame)
         {
             ffmpeg.sws_scale(
                 _scaleContext,
@@ -72,15 +62,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 _dstLinesize)
                 .ThrowExceptionIfError();
 
-            var frame = new AVFrame();
-
-            frame.data.UpdateFrom(_dstData);
-            frame.linesize.UpdateFrom(_dstLinesize);
-            frame.width = _frameWidth;
-            frame.height = _frameHeight;
-            frame.format = (int)_destinationPixelFormat;
-
-            return frame;
+            return new Span<byte>((byte*)_bufferPtr, _bufferSize);
         }
 
         public void Dispose()
