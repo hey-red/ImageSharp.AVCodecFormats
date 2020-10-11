@@ -38,6 +38,14 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp4
                         subHeader[3] == 0x32        // 2
                     )
                     ||
+                    // MP4 v1 [ISO 14496-1:ch13]
+                    (
+                        subHeader[0] == 0x6D &&     // m
+                        subHeader[1] == 0x70 &&     // p
+                        subHeader[2] == 0x34 &&     // 4
+                        subHeader[3] == 0x31        // 1
+                    )
+                    ||
                     // MP4 v2 [ISO 14496-14]
                     (
                         subHeader[0] == 0x6D &&     // m
