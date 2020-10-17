@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 
 using FFmpeg.AutoGen;
 
@@ -9,17 +8,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 {
     internal sealed unsafe class FrameResampler : IDisposable
     {
-        private const int LINESIZE_ALIGNMENT = 1;
-
         private readonly SwsContext* _scaleContext;
 
-        private readonly int _bufferSize;
-
-        private readonly void* _bufferPtr;
-
-        private readonly byte_ptrArray4 _dstData;
-
-        private readonly int_array4 _dstLinesize;
+        private readonly int _destStride;
 
         public FrameResampler(
             int frameWidth,
@@ -27,6 +18,8 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             AVPixelFormat sourcePixelFormat,
             AVPixelFormat destinationPixelFormat)
         {
+            _destStride = (int)GetBytesPerPixel(destinationPixelFormat) * frameWidth;
+
             _scaleContext = ffmpeg.sws_getContext(
                 frameWidth,
                 frameHeight,
@@ -39,47 +32,43 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             {
                 throw new AVException("Could not initialize the conversion context.");
             }
-
-            _bufferSize = ffmpeg.av_image_get_buffer_size(destinationPixelFormat, frameWidth, frameHeight, LINESIZE_ALIGNMENT)
-                .ThrowExceptionIfError();
-
-            _bufferPtr = ffmpeg.av_malloc((ulong)_bufferSize);
-            if (_bufferPtr == null)
-            {
-                throw new AVException("Cannot allocate memory buffer.");
-            }
-
-            _dstData = new byte_ptrArray4();
-            _dstLinesize = new int_array4();
-
-            ffmpeg.av_image_fill_arrays(ref _dstData, ref _dstLinesize, (byte*)_bufferPtr, destinationPixelFormat, frameWidth, frameHeight, LINESIZE_ALIGNMENT)
-                .ThrowExceptionIfError();
         }
 
         public Span<byte> Resample(AVFrame* sourceFrame)
         {
-            ffmpeg.sws_scale(
-                _scaleContext,
-                sourceFrame->data,
-                sourceFrame->linesize,
-                0,
-                sourceFrame->height,
-                _dstData,
-                _dstLinesize)
-                .ThrowExceptionIfError();
+            int bufferSize = _destStride * sourceFrame->height;
 
-            // Just copy to managed array
-            var buffer = new byte[_bufferSize];
+            Span<byte> span = new byte[bufferSize];
 
-            Marshal.Copy((IntPtr)_bufferPtr, buffer, 0, _bufferSize);
+            fixed (byte* ptr = span)
+            {
+                var data = new byte*[4] { ptr, null, null, null };
 
-            return new Span<byte>(buffer);
+                var linesize = new int[4] { _destStride, 0, 0, 0 };
+
+                ffmpeg.sws_scale(
+                    _scaleContext,
+                    sourceFrame->data,
+                    sourceFrame->linesize,
+                    0,
+                    sourceFrame->height,
+                    data,
+                    linesize)
+                    .ThrowExceptionIfError();
+            }
+
+            return span;
         }
 
-        public void Dispose()
+        private double GetBytesPerPixel(AVPixelFormat format) => format switch
         {
-            ffmpeg.av_free(_bufferPtr);
-            ffmpeg.sws_freeContext(_scaleContext);
-        }
+            AVPixelFormat.AV_PIX_FMT_RGBA => 4,
+            AVPixelFormat.AV_PIX_FMT_ARGB => 4,
+            AVPixelFormat.AV_PIX_FMT_BGRA => 4,
+            AVPixelFormat.AV_PIX_FMT_RGB24 => 3,
+            _ => 0
+        };
+
+        public void Dispose() => ffmpeg.sws_freeContext(_scaleContext);
     }
 }

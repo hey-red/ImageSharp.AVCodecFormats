@@ -48,19 +48,13 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             AVFrame* frame = streamDecoder.DecodeFrame();
 
             using var frameResampler = new FrameResampler(frame->width, frame->height, (AVPixelFormat)frame->format,
-                // FIXME: Some formats can be mapped incorrectly
                 destinationPixelFormat: default(TPixel) switch
                 {
                     Rgb24 _ => AVPixelFormat.AV_PIX_FMT_RGB24,
                     Argb32 _ => AVPixelFormat.AV_PIX_FMT_ARGB,
                     Rgba32 _ => AVPixelFormat.AV_PIX_FMT_RGBA,
                     Bgra32 _ => AVPixelFormat.AV_PIX_FMT_BGRA,
-                    Bgra4444 _ => AVPixelFormat.AV_PIX_FMT_RGB4_BYTE,
-                    // BE or LE?
-                    Rgba64 _ => AVPixelFormat.AV_PIX_FMT_RGBA64BE,
-                    // BE or LE?
-                    Bgr565 _ => AVPixelFormat.AV_PIX_FMT_BGR565BE,
-                    _ => throw new ArgumentException("Invalid pixel format."),
+                    _ => throw new ArgumentException("Unsupported pixel format."),
                 });
 
             Span<byte> frameData = frameResampler.Resample(frame);
