@@ -42,6 +42,7 @@ namespace ImageSharp.AVCodecFormats.Tests
         [InlineData("vp9.webm", 1280, 720)]
         [InlineData("vp8.webm", 344, 360)]
         [InlineData("mpga.mp3", 700, 700)]
+        [InlineData("mpga_png.mp3", 700, 700)]
         public void IdentifyVideoTest(string fileName, int width, int height)
         {
             string filePath = Path.Combine(_testVideoDataPath, fileName);
