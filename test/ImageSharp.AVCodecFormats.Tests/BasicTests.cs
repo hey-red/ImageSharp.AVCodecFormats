@@ -70,7 +70,6 @@ namespace ImageSharp.AVCodecFormats.Tests
         [InlineData("vp9.webm", 1280, 720, 200, 112)]
         [InlineData("vp8.webm", 344, 360, 191, 200)]
         [InlineData("mpga.mp3", 700, 700, 200, 200)]
-        [InlineData("mpga_png.mp3", 700, 700, 200, 200)]
         public void ThumbnailVideoTest(
             string fileName,
             int width, int height,

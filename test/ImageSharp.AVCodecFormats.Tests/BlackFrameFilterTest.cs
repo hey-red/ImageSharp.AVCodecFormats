@@ -10,13 +10,13 @@ using Xunit;
 
 namespace ImageSharp.AVCodecFormats.Tests
 {
-    public class OptionsTests
+    public class BlackFrameFilterTest
     {
         private readonly string _testVideoDataPath;
 
         private readonly Configuration _configuration;
 
-        public OptionsTests()
+        public BlackFrameFilterTest()
         {
             _testVideoDataPath = TestUtils.GetTestDataPath();
             _configuration = TestUtils.GetImageSharpConfiguration();
@@ -27,14 +27,17 @@ namespace ImageSharp.AVCodecFormats.Tests
         {
             string filePath = Path.Combine(_testVideoDataPath, "black_frame.mp4");
 
-            var options = new AVDecoderOptions { EnableBlackFrameFilter = true };
+            var options = new AVDecoderOptions
+            {
+                BlackFilterOptions = new BlackFrameFilterOptions()
+            };
 
             _configuration.ImageFormatsManager.SetDecoder(Mp4Format.Instance, new Mp4Decoder(options));
 
             using var inputStream = File.OpenRead(filePath);
-            using var image = Image.Load<Rgba32>(_configuration, inputStream);
+            using var image = Image.Load<Rgb24>(_configuration, inputStream);
 
-            Assert.NotEqual(Color.Black.ToPixel<Rgba32>(), image[0, 0]);
+            Assert.NotEqual(Color.Black.ToPixel<Rgb24>(), image[0, 0]);
         }
 
         [Fact]
@@ -42,14 +45,12 @@ namespace ImageSharp.AVCodecFormats.Tests
         {
             string filePath = Path.Combine(_testVideoDataPath, "black_frame.mp4");
 
-            var options = new AVDecoderOptions { EnableBlackFrameFilter = false };
-
-            _configuration.ImageFormatsManager.SetDecoder(Mp4Format.Instance, new Mp4Decoder(options));
+            _configuration.ImageFormatsManager.SetDecoder(Mp4Format.Instance, new Mp4Decoder());
 
             using var inputStream = File.OpenRead(filePath);
-            using var image = Image.Load<Rgba32>(_configuration, inputStream);
+            using var image = Image.Load<Rgb24>(_configuration, inputStream);
 
-            Assert.Equal(Color.Black.ToPixel<Rgba32>(), image[0, 0]);
+            Assert.Equal(Color.Black.ToPixel<Rgb24>(), image[0, 0]);
         }
     }
 }

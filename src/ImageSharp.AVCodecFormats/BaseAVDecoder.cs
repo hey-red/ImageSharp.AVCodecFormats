@@ -3,10 +3,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FFmpeg.AutoGen;
-
-using HeyRed.ImageSharp.AVCodecFormats.Common;
-using HeyRed.ImageSharp.AVCodecFormats.IO;
+using FFMediaToolkit;
+using FFMediaToolkit.Decoding;
+using FFMediaToolkit.Graphics;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
@@ -20,9 +19,16 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private static bool _initBinaries = false;
 
+        private readonly BlackFrameFilter? _blackFrameFilter;
+
         protected BaseAVDecoder(IAVDecoderOptions decoderOptions) : this()
         {
-            _decoderOptions = decoderOptions ?? throw new ArgumentNullException(nameof(decoderOptions));
+            _options = decoderOptions ?? throw new ArgumentNullException(nameof(decoderOptions));
+
+            if (_options.BlackFilterOptions != null)
+            {
+                _blackFrameFilter = new BlackFrameFilter(_options.BlackFilterOptions);
+            }
         }
 
         protected BaseAVDecoder()
@@ -33,34 +39,61 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             {
                 if (!_initBinaries)
                 {
-                    AVBinariesFinder.FindBinaries();
+                    FFmpegLoader.LoadFFmpeg();
 
                     _initBinaries = true;
                 }
             }
         }
 
-        private readonly IAVDecoderOptions? _decoderOptions;
+        private readonly IAVDecoderOptions? _options;
 
         public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
         {
-            using var streamDecoder = new StreamDecoder(new AvioStream(stream), _decoderOptions);
-            AVFrame* frame = streamDecoder.DecodeFrame();
-
-            using var frameResampler = new FrameResampler(frame->width, frame->height, (AVPixelFormat)frame->format,
-                destinationPixelFormat: default(TPixel) switch
+            using var file = MediaFile.Open(stream, new MediaOptions
+            {
+                // TODO: Rgba32
+                VideoPixelFormat = default(TPixel) switch
                 {
-                    Rgb24 _ => AVPixelFormat.AV_PIX_FMT_RGB24,
-                    Argb32 _ => AVPixelFormat.AV_PIX_FMT_ARGB,
-                    Rgba32 _ => AVPixelFormat.AV_PIX_FMT_RGBA,
-                    Bgra32 _ => AVPixelFormat.AV_PIX_FMT_BGRA,
+                    Rgb24 _ => ImagePixelFormat.Rgb24,
+                    Bgr24 _ => ImagePixelFormat.Bgr24,
+                    Argb32 _ => ImagePixelFormat.Argb32,
+                    Bgra32 _ => ImagePixelFormat.Bgra32,
                     _ => throw new ArgumentException("Unsupported pixel format."),
-                });
+                },
+                DemuxerOptions = new ContainerOptions
+                {
+                    FlagDiscardCorrupt = true,
+                },
+            });
 
-            Span<byte> frameData = frameResampler.Resample(frame);
+            ImageData frame;
 
-            return Image.LoadPixelData<TPixel>(frameData, frame->width, frame->height);
+            if (_options?.BlackFilterOptions != null &&
+                _blackFrameFilter != null)
+            {
+                bool isBlackFrame = false;
+
+                int decodedFramesCounter = 0;
+                do
+                {
+                    frame = file.Video.ReadNextFrame();
+
+                    isBlackFrame = _blackFrameFilter.IsBlackFrame(frame);
+
+                    decodedFramesCounter++;
+                }
+                while (isBlackFrame && decodedFramesCounter <= _options.BlackFilterOptions.FramesLimit);
+            }
+            else
+            {
+                frame = file.Video.ReadNextFrame();
+            }
+
+            return Image.LoadPixelData<TPixel>(frame.Data, frame.ImageSize.Width, frame.ImageSize.Height);
         }
+
+        public virtual Image Decode(Configuration configuration, Stream stream) => Decode<Rgb24>(configuration, stream);
 
         public virtual Task<Image<TPixel>> DecodeAsync<TPixel>(Configuration configuration, Stream stream, CancellationToken cancellationToken)
             where TPixel : unmanaged, IPixel<TPixel>
@@ -70,9 +103,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             return Task.FromResult(Decode<TPixel>(configuration, stream));
         }
 
-        public virtual Image Decode(Configuration configuration, Stream stream)
-            => Decode<Rgba32>(configuration, stream);
-
         public virtual Task<Image> DecodeAsync(Configuration configuration, Stream stream, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -80,18 +110,14 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             return Task.FromResult(Decode(configuration, stream));
         }
 
-        // TODO: result object instead exception
         public virtual IImageInfo? Identify(Configuration configuration, Stream stream)
         {
-            try
-            {
-                using var streamDecoder = new StreamDecoder(new AvioStream(stream), _decoderOptions);
+            using var file = MediaFile.Open(stream);
 
-                return new ImageInfo(
-                    streamDecoder.SourceWidth,
-                    streamDecoder.SourceHeight);
+            if (file.HasVideo)
+            {
+                return new ImageInfo(file.Video.Info.FrameSize.Width, file.Video.Info.FrameSize.Height);
             }
-            catch (Exception e) { Console.WriteLine(e.Message); }
 
             return null;
         }
