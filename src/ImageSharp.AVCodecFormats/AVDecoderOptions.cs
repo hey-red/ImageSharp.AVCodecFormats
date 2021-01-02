@@ -2,5 +2,6 @@
 {
     public class AVDecoderOptions : IAVDecoderOptions
     {
+        public BlackFrameFilterOptions? BlackFilterOptions { get; set; }
     }
 }

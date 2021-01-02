@@ -19,9 +19,16 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private static bool _initBinaries = false;
 
+        private readonly BlackFrameFilter? _blackFrameFilter;
+
         protected BaseAVDecoder(IAVDecoderOptions decoderOptions) : this()
         {
-            _decoderOptions = decoderOptions ?? throw new ArgumentNullException(nameof(decoderOptions));
+            _options = decoderOptions ?? throw new ArgumentNullException(nameof(decoderOptions));
+
+            if (_options.BlackFilterOptions != null)
+            {
+                _blackFrameFilter = new BlackFrameFilter(_options.BlackFilterOptions);
+            }
         }
 
         protected BaseAVDecoder()
@@ -39,7 +46,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             }
         }
 
-        private readonly IAVDecoderOptions? _decoderOptions;
+        private readonly IAVDecoderOptions? _options;
 
         public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
         {
@@ -60,7 +67,28 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 },
             });
 
-            var frame = file.Video.ReadNextFrame();
+            ImageData frame;
+
+            if (_options?.BlackFilterOptions != null &&
+                _blackFrameFilter != null)
+            {
+                bool isBlackFrame = false;
+
+                int decodedFramesCounter = 0;
+                do
+                {
+                    frame = file.Video.ReadNextFrame();
+
+                    isBlackFrame = _blackFrameFilter.IsBlackFrame(frame);
+
+                    decodedFramesCounter++;
+                }
+                while (isBlackFrame && decodedFramesCounter <= _options.BlackFilterOptions.FramesLimit);
+            }
+            else
+            {
+                frame = file.Video.ReadNextFrame();
+            }
 
             return Image.LoadPixelData<TPixel>(frame.Data, frame.ImageSize.Width, frame.ImageSize.Height);
         }
