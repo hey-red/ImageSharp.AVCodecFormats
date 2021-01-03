@@ -3,9 +3,10 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FFMediaToolkit;
 using FFMediaToolkit.Decoding;
 using FFMediaToolkit.Graphics;
+
+using HeyRed.ImageSharp.AVCodecFormats.Common;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
@@ -39,7 +40,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             {
                 if (!_initBinaries)
                 {
-                    FFmpegLoader.LoadFFmpeg();
+                    FFmpegBinariesFinder.FindBinaries();
 
                     _initBinaries = true;
                 }
