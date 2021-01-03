@@ -19,7 +19,7 @@ PM> Install-Package ImageSharp.AVCodecFormats.Native.linux-x64
 
 Without native packages you should provide your own shared FFmpeg build and set path:
 
-`ffmpeg.RootPath = "/path/to/native/binaries"`
+`FFmpegBinaries.Path = "/path/to/native/binaries"`
 
 On Linux you have another way to get native libs. Just install ffmpeg from your package manager, but I have no guarantees that it will work as expected.
 
