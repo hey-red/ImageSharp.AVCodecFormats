@@ -62,6 +62,22 @@ image.Save(outputStream, new JpegEncoder());
 ```
 More info <https://docs.sixlabors.com/articles/imagesharp/configuration.html>
 
+## Blackframe filter
+You can skip first (n) of frames that are black or almost black.
+```C#
+var options = new AVDecoderOptions
+{
+    // With default values(see docs)
+    BlackFilterOptions = new BlackFrameFilterOptions()
+};
+
+var configuration = new Configuration().WithAVDecoders(options);
+
+using var inputStream = File.OpenRead(filePath);
+using var image = Image.Load(configuration, inputStream);
+```
+The docs for filter options can be found [here](https://github.com/hey-red/ImageSharp.AVCodecFormats/blob/master/src/ImageSharp.AVCodecFormats/BlackFrameFilterOptions.cs).
+
 ## Supported formats
 mp4, webm, avi, mkv, mov, ts, wmv, mp3(extract cover image).
 
