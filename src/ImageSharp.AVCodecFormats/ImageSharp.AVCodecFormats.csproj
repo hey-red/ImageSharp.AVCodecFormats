@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FFMediaToolkit" Version="3.3.0" />
+    <PackageReference Include="FFMediaToolkit" Version="3.4.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.2" />
   </ItemGroup>
 </Project>

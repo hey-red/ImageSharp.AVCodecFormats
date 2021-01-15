@@ -58,6 +58,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 {
                     Rgb24 _ => ImagePixelFormat.Rgb24,
                     Bgr24 _ => ImagePixelFormat.Bgr24,
+                    Rgba32 _ => ImagePixelFormat.Rgba32,
                     Argb32 _ => ImagePixelFormat.Argb32,
                     Bgra32 _ => ImagePixelFormat.Bgra32,
                     _ => throw new ArgumentException("Unsupported pixel format."),
