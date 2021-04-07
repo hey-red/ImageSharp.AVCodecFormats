@@ -12,6 +12,8 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 
+using DrawingSize = System.Drawing.Size;
+
 namespace HeyRed.ImageSharp.AVCodecFormats
 {
     public unsafe abstract class BaseAVDecoder : IImageDecoder, IImageInfoDetector
@@ -51,6 +53,13 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
         {
+            DrawingSize? targetFrameSize = null;
+            if (_options?.TargetFrameSize != null)
+            {
+                (int width, int height) = _options.TargetFrameSize.Value;
+                targetFrameSize = new DrawingSize(width, height);
+            }
+
             using var file = MediaFile.Open(stream, new MediaOptions
             {
                 VideoPixelFormat = default(TPixel) switch
@@ -67,7 +76,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                     FlagDiscardCorrupt = true,
                 },
                 StreamsToLoad = MediaMode.Video,
-                TargetVideoSize = _options?.TargetFrameSize,
+                TargetVideoSize = targetFrameSize,
             });
 
             ImageData frame;
