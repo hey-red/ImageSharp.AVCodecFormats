@@ -1,4 +1,6 @@
-﻿namespace HeyRed.ImageSharp.AVCodecFormats
+﻿using System.Drawing;
+
+namespace HeyRed.ImageSharp.AVCodecFormats
 {
     public interface IAVDecoderOptions
     {
@@ -6,5 +8,10 @@
         /// Detect frames that are (almost) completely black.
         /// </summary>
         BlackFrameFilterOptions? BlackFilterOptions { get; }
+
+        /// <summary>
+        /// Rescale decoded frame with given size.
+        /// </summary>
+        Size? TargetFrameSize { get; }
     }
 }

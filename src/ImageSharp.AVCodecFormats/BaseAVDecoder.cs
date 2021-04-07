@@ -67,6 +67,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                     FlagDiscardCorrupt = true,
                 },
                 StreamsToLoad = MediaMode.Video,
+                TargetVideoSize = _options?.TargetFrameSize,
             });
 
             ImageData frame;
