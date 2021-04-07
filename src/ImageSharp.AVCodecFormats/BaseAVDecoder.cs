@@ -53,7 +53,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
         {
             using var file = MediaFile.Open(stream, new MediaOptions
             {
-                // TODO: Rgba32
                 VideoPixelFormat = default(TPixel) switch
                 {
                     Rgb24 _ => ImagePixelFormat.Rgb24,
@@ -67,6 +66,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 {
                     FlagDiscardCorrupt = true,
                 },
+                StreamsToLoad = MediaMode.Video,
             });
 
             ImageData frame;
@@ -79,9 +79,14 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 int decodedFramesCounter = 0;
                 do
                 {
-                    frame = file.Video.ReadNextFrame();
-
-                    isBlackFrame = _blackFrameFilter.IsBlackFrame(frame);
+                    if (file.Video.TryGetNextFrame(out frame))
+                    {
+                        isBlackFrame = _blackFrameFilter.IsBlackFrame(frame);
+                    }
+                    else
+                    {
+                        break;
+                    }
 
                     decodedFramesCounter++;
                 }
@@ -89,7 +94,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             }
             else
             {
-                frame = file.Video.ReadNextFrame();
+                file.Video.TryGetNextFrame(out frame);
             }
 
             return Image.LoadPixelData<TPixel>(frame.Data, frame.ImageSize.Width, frame.ImageSize.Height);
