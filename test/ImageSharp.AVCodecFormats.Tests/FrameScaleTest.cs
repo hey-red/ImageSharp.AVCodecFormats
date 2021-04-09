@@ -21,14 +21,20 @@ namespace ImageSharp.AVCodecFormats.Tests
             _configuration = TestUtils.GetImageSharpConfiguration();
         }
 
-        [Fact]
-        public void BasicTest()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void BasicTest(bool aspectRatio)
         {
             string filePath = Path.Combine(_testVideoDataPath, "avc.mp4");
 
             var options = new AVDecoderOptions
             {
-                TargetFrameSize = new Size(100, 100),
+                FrameSizeOptions = new FrameSizeOptions()
+                {
+                    TargetFrameSize = new Size(100, 100),
+                    PreserveAspectRation = aspectRatio,
+                },
             };
 
             _configuration.ImageFormatsManager.SetDecoder(Mp4Format.Instance, new Mp4Decoder(options));
@@ -36,8 +42,16 @@ namespace ImageSharp.AVCodecFormats.Tests
             using var inputStream = File.OpenRead(filePath);
             using var image = Image.Load(_configuration, inputStream);
 
-            Assert.Equal(100, image.Width);
-            Assert.Equal(100, image.Height);
+            if (!aspectRatio)
+            {
+                Assert.Equal(100, image.Width);
+                Assert.Equal(100, image.Height);
+            }
+            else
+            {
+                Assert.Equal(100, image.Width);
+                Assert.Equal(56, image.Height);
+            }
         }
     }
 }

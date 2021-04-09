@@ -51,17 +51,51 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         private readonly IAVDecoderOptions? _options;
 
+        private DrawingSize CalculateSizeWithAspectRatio(Size sourceSize, int size)
+        {
+            double ratio = 1;
+            if (sourceSize.Width > size || sourceSize.Height > size)
+            {
+                var ratioX = size / (double)sourceSize.Width;
+                var ratioY = size / (double)sourceSize.Height;
+                ratio = Math.Min(ratioX, ratioY);
+            }
+
+            return new DrawingSize(
+                (int)Math.Round(sourceSize.Width * ratio),
+                (int)Math.Round(sourceSize.Height * ratio));
+        }
+
         public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
         {
             DrawingSize? targetFrameSize = null;
-            if (_options?.TargetFrameSize != null)
+            if (_options?.FrameSizeOptions != null)
             {
-                (int width, int height) = _options.TargetFrameSize.Value;
-                targetFrameSize = new DrawingSize(width, height);
+                (int targetWidth, int targetHeight) = _options.FrameSizeOptions.TargetFrameSize;
+                // Calculate frames size with aspect ratio
+                if (_options.FrameSizeOptions.PreserveAspectRation)
+                {
+                    IImageInfo? sourceInfo = Identify(configuration, stream);
+                    if (sourceInfo is not null)
+                    {
+                        int size = Math.Max(targetWidth, targetHeight);
+                        targetFrameSize = CalculateSizeWithAspectRatio(new Size(sourceInfo.Width, sourceInfo.Height), size);
+                    }
+
+                    if (stream.CanSeek)
+                    {
+                        stream.Position = 0;
+                    }
+                }
+                else
+                {
+                    targetFrameSize = new DrawingSize(targetWidth, targetHeight);
+                }
             }
 
             using var file = MediaFile.Open(stream, new MediaOptions
             {
+                // Map imagesharp pixel format to ffmpeg pixel format
                 VideoPixelFormat = default(TPixel) switch
                 {
                     Rgb24 _ => ImagePixelFormat.Rgb24,
@@ -71,16 +105,17 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                     Bgra32 _ => ImagePixelFormat.Bgra32,
                     _ => throw new ArgumentException("Unsupported pixel format."),
                 },
+                TargetVideoSize = targetFrameSize,
                 DemuxerOptions = new ContainerOptions
                 {
                     FlagDiscardCorrupt = true,
                 },
                 StreamsToLoad = MediaMode.Video,
-                TargetVideoSize = targetFrameSize,
             });
 
             ImageData frame;
 
+            // Filter black frames
             if (_options?.BlackFilterOptions != null &&
                 _blackFrameFilter != null)
             {
@@ -129,7 +164,10 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         public virtual IImageInfo? Identify(Configuration configuration, Stream stream)
         {
-            using var file = MediaFile.Open(stream);
+            using var file = MediaFile.Open(stream, new MediaOptions
+            {
+                StreamsToLoad = MediaMode.Video
+            });
 
             if (file.HasVideo)
             {

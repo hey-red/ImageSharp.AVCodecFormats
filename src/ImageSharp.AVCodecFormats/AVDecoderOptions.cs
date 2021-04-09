@@ -1,11 +1,9 @@
-﻿using SixLabors.ImageSharp;
-
-namespace HeyRed.ImageSharp.AVCodecFormats
+﻿namespace HeyRed.ImageSharp.AVCodecFormats
 {
     public class AVDecoderOptions : IAVDecoderOptions
     {
         public BlackFrameFilterOptions? BlackFilterOptions { get; set; }
 
-        public Size? TargetFrameSize { get; set; }
+        public FrameSizeOptions? FrameSizeOptions { get; set; }
     }
 }

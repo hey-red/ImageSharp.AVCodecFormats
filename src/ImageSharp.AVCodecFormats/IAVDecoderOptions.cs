@@ -9,9 +9,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
         /// </summary>
         BlackFrameFilterOptions? BlackFilterOptions { get; }
 
-        /// <summary>
-        /// Rescale decoded frame with given size.
-        /// </summary>
-        Size? TargetFrameSize { get; }
+        FrameSizeOptions? FrameSizeOptions { get; }
     }
 }
