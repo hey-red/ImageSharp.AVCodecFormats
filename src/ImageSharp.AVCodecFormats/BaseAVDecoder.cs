@@ -66,7 +66,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 (int)Math.Round(sourceSize.Height * ratio));
         }
 
-        public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
+        private DrawingSize? CalculateTargetSize(Configuration configuration, Stream stream)
         {
             DrawingSize? targetFrameSize = null;
             if (_options?.FrameSizeOptions != null)
@@ -92,57 +92,68 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                     targetFrameSize = new DrawingSize(targetWidth, targetHeight);
                 }
             }
+            return targetFrameSize;
+        }
 
-            using var file = MediaFile.Open(stream, new MediaOptions
+        private ImagePixelFormat MapPixelFormat<TPixel>(TPixel sourcePixelFormat) => sourcePixelFormat switch
+        {
+            Rgb24 _ => ImagePixelFormat.Rgb24,
+            Bgr24 _ => ImagePixelFormat.Bgr24,
+            Rgba32 _ => ImagePixelFormat.Rgba32,
+            Argb32 _ => ImagePixelFormat.Argb32,
+            Bgra32 _ => ImagePixelFormat.Bgra32,
+            _ => throw new ArgumentException("Unsupported pixel format."),
+        };
+
+        public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
+        {
+            lock (syncRoot)
             {
-                // Map imagesharp pixel format to ffmpeg pixel format
-                VideoPixelFormat = default(TPixel) switch
-                {
-                    Rgb24 _ => ImagePixelFormat.Rgb24,
-                    Bgr24 _ => ImagePixelFormat.Bgr24,
-                    Rgba32 _ => ImagePixelFormat.Rgba32,
-                    Argb32 _ => ImagePixelFormat.Argb32,
-                    Bgra32 _ => ImagePixelFormat.Bgra32,
-                    _ => throw new ArgumentException("Unsupported pixel format."),
-                },
-                TargetVideoSize = targetFrameSize,
-                DemuxerOptions = new ContainerOptions
-                {
-                    FlagDiscardCorrupt = true,
-                },
-                StreamsToLoad = MediaMode.Video,
-            });
+                DrawingSize? targetFrameSize = CalculateTargetSize(configuration, stream);
 
-            ImageData frame;
-
-            // Filter black frames
-            if (_options?.BlackFilterOptions != null &&
-                _blackFrameFilter != null)
-            {
-                bool isBlackFrame = false;
-
-                int decodedFramesCounter = 0;
-                do
+                using var file = MediaFile.Open(stream, new MediaOptions
                 {
-                    if (file.Video.TryGetNextFrame(out frame))
+                    // Map imagesharp pixel format to ffmpeg pixel format
+                    VideoPixelFormat = MapPixelFormat(default(TPixel)),
+                    TargetVideoSize = targetFrameSize,
+                    DemuxerOptions = new ContainerOptions
                     {
-                        isBlackFrame = _blackFrameFilter.IsBlackFrame(frame);
-                    }
-                    else
-                    {
-                        break;
-                    }
+                        FlagDiscardCorrupt = true,
+                    },
+                    StreamsToLoad = MediaMode.Video,
+                });
 
-                    decodedFramesCounter++;
+                ImageData frame;
+
+                // Filter black frames
+                if (_options?.BlackFilterOptions != null &&
+                    _blackFrameFilter != null)
+                {
+                    bool isBlackFrame = false;
+
+                    int decodedFramesCounter = 0;
+                    do
+                    {
+                        if (file.Video.TryGetNextFrame(out frame))
+                        {
+                            isBlackFrame = _blackFrameFilter.IsBlackFrame(frame);
+                        }
+                        else
+                        {
+                            break;
+                        }
+
+                        decodedFramesCounter++;
+                    }
+                    while (isBlackFrame && decodedFramesCounter <= _options.BlackFilterOptions.FramesLimit);
                 }
-                while (isBlackFrame && decodedFramesCounter <= _options.BlackFilterOptions.FramesLimit);
-            }
-            else
-            {
-                file.Video.TryGetNextFrame(out frame);
-            }
+                else
+                {
+                    file.Video.TryGetNextFrame(out frame);
+                }
 
-            return Image.LoadPixelData<TPixel>(frame.Data, frame.ImageSize.Width, frame.ImageSize.Height);
+                return Image.LoadPixelData<TPixel>(frame.Data, frame.ImageSize.Width, frame.ImageSize.Height);
+            }
         }
 
         public virtual Image Decode(Configuration configuration, Stream stream) => Decode<Rgb24>(configuration, stream);
@@ -164,17 +175,20 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         public virtual IImageInfo? Identify(Configuration configuration, Stream stream)
         {
-            using var file = MediaFile.Open(stream, new MediaOptions
+            lock (syncRoot)
             {
-                StreamsToLoad = MediaMode.Video
-            });
+                using var file = MediaFile.Open(stream, new MediaOptions
+                {
+                    StreamsToLoad = MediaMode.Video
+                });
 
-            if (file.HasVideo)
-            {
-                return new ImageInfo(file.Video.Info.FrameSize.Width, file.Video.Info.FrameSize.Height);
+                if (file.HasVideo)
+                {
+                    return new ImageInfo(file.Video.Info.FrameSize.Width, file.Video.Info.FrameSize.Height);
+                }
+
+                return null;
             }
-
-            return null;
         }
 
         public virtual Task<IImageInfo?> IdentifyAsync(Configuration configuration, Stream stream, CancellationToken cancellationToken)
