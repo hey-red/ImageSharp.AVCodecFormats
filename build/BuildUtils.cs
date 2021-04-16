@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
@@ -12,7 +13,7 @@ namespace Build
             var inputStream = File.OpenRead(tarballFileName);
             var gzipStream = new GZipInputStream(inputStream);
 
-            var tarArchive = TarArchive.CreateInputTarArchive(gzipStream);
+            var tarArchive = TarArchive.CreateInputTarArchive(gzipStream, Encoding.UTF8);
             tarArchive.ExtractContents(destDirectory);
             tarArchive.Close();
 
