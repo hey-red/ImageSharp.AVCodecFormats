@@ -18,7 +18,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 {
     public unsafe abstract class BaseAVDecoder : IImageDecoder, IImageInfoDetector
     {
-        private static readonly object syncRoot = new object();
+        private static readonly object syncRoot = new();
 
         private static bool _initBinaries = false;
 
@@ -61,7 +61,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 ratio = Math.Min(ratioX, ratioY);
             }
 
-            return new DrawingSize(
+            return new(
                 (int)Math.Round(sourceSize.Width * ratio),
                 (int)Math.Round(sourceSize.Height * ratio));
         }

@@ -10,7 +10,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mov
         {
         }
 
-        public static MovFormat Instance { get; } = new MovFormat();
+        public static MovFormat Instance { get; } = new();
 
         public string Name => "QuickTime Movie";
 
@@ -20,6 +20,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mov
 
         public IEnumerable<string> FileExtensions => new[] { "mov" };
 
-        public MovMetadata CreateDefaultFormatMetadata() => new MovMetadata();
+        public MovMetadata CreateDefaultFormatMetadata() => new();
     }
 }

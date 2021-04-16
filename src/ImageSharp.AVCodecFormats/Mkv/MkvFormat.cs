@@ -10,7 +10,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mkv
         {
         }
 
-        public static MkvFormat Instance { get; } = new MkvFormat();
+        public static MkvFormat Instance { get; } = new();
 
         public string Name => "Matroska";
 
@@ -20,6 +20,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mkv
 
         public IEnumerable<string> FileExtensions => new[] { "mkv" };
 
-        public MkvMetadata CreateDefaultFormatMetadata() => new MkvMetadata();
+        public MkvMetadata CreateDefaultFormatMetadata() => new();
     }
 }

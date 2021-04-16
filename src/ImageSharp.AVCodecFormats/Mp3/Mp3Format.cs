@@ -10,7 +10,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp3
         {
         }
 
-        public static Mp3Format Instance { get; } = new Mp3Format();
+        public static Mp3Format Instance { get; } = new();
 
         public string Name => "MP3";
 
@@ -20,6 +20,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp3
 
         public IEnumerable<string> FileExtensions => new[] { "mp3", "mpga" };
 
-        public Mp3Metadata CreateDefaultFormatMetadata() => new Mp3Metadata();
+        public Mp3Metadata CreateDefaultFormatMetadata() => new();
     }
 }

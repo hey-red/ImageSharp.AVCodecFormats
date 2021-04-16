@@ -10,7 +10,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp4
         {
         }
 
-        public static Mp4Format Instance { get; } = new Mp4Format();
+        public static Mp4Format Instance { get; } = new();
 
         public string Name => "MP4";
 
@@ -20,6 +20,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp4
 
         public IEnumerable<string> FileExtensions => new[] { "mp4" };
 
-        public Mp4Metadata CreateDefaultFormatMetadata() => new Mp4Metadata();
+        public Mp4Metadata CreateDefaultFormatMetadata() => new();
     }
 }

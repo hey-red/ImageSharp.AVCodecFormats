@@ -10,7 +10,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Wmv
         {
         }
 
-        public static WmvFormat Instance { get; } = new WmvFormat();
+        public static WmvFormat Instance { get; } = new();
 
         public string Name => "Windows Media Video";
 
@@ -20,6 +20,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Wmv
 
         public IEnumerable<string> FileExtensions => new[] { "wmv" };
 
-        public WmvMetadata CreateDefaultFormatMetadata() => new WmvMetadata();
+        public WmvMetadata CreateDefaultFormatMetadata() => new();
     }
 }

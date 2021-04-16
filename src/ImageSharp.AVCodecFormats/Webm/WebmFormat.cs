@@ -10,7 +10,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Webm
         {
         }
 
-        public static WebmFormat Instance { get; } = new WebmFormat();
+        public static WebmFormat Instance { get; } = new();
 
         public string Name => "WebM";
 
@@ -20,6 +20,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Webm
 
         public IEnumerable<string> FileExtensions => new[] { "webm" };
 
-        public WebmMetadata CreateDefaultFormatMetadata() => new WebmMetadata();
+        public WebmMetadata CreateDefaultFormatMetadata() => new();
     }
 }

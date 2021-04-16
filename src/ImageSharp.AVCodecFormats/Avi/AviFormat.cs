@@ -10,7 +10,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Avi
         {
         }
 
-        public static AviFormat Instance { get; } = new AviFormat();
+        public static AviFormat Instance { get; } = new();
 
         public string Name => "AVI";
 
@@ -20,6 +20,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Avi
 
         public IEnumerable<string> FileExtensions => new[] { "avi" };
 
-        public AviMetadata CreateDefaultFormatMetadata() => new AviMetadata();
+        public AviMetadata CreateDefaultFormatMetadata() => new();
     }
 }

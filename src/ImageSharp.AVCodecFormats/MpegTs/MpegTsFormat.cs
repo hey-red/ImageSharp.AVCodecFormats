@@ -10,7 +10,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.MpegTs
         {
         }
 
-        public static MpegTsFormat Instance { get; } = new MpegTsFormat();
+        public static MpegTsFormat Instance { get; } = new();
 
         public string Name => "MPEG Transport Stream";
 
@@ -20,6 +20,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats.MpegTs
 
         public IEnumerable<string> FileExtensions => new[] { "ts", "tsv", "tsa" };
 
-        public MpegTsMetadata CreateDefaultFormatMetadata() => new MpegTsMetadata();
+        public MpegTsMetadata CreateDefaultFormatMetadata() => new();
     }
 }
