@@ -14,7 +14,7 @@ namespace Build
 {
     public class Build : NukeBuild
     {
-        private const string NATIVE_VERSION = "1.2.0";
+        private const string NATIVE_VERSION = "1.3.0";
 
         private readonly IEnumerable<string> _architectures = new[] { "linux-x64", "win-x64" };
 
@@ -77,8 +77,8 @@ namespace Build
              });
 
         private Target All => _ => _
-                   .DependsOn(CleanUp)
-                   .DependsOn(CreateNuGetPackages);
+                    .DependsOn(CleanUp)
+                    .DependsOn(CreateNuGetPackages);
 
         public static int Main() => Execute<Build>(x => x.All);
     }
