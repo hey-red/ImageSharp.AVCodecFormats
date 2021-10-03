@@ -107,53 +107,50 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
         {
-            lock (syncRoot)
+            DrawingSize? targetFrameSize = CalculateTargetSize(configuration, stream);
+
+            using var file = MediaFile.Open(stream, new MediaOptions
             {
-                DrawingSize? targetFrameSize = CalculateTargetSize(configuration, stream);
-
-                using var file = MediaFile.Open(stream, new MediaOptions
+                // Map imagesharp pixel format to ffmpeg pixel format
+                VideoPixelFormat = MapPixelFormat(default(TPixel)),
+                TargetVideoSize = targetFrameSize,
+                DemuxerOptions = new ContainerOptions
                 {
-                    // Map imagesharp pixel format to ffmpeg pixel format
-                    VideoPixelFormat = MapPixelFormat(default(TPixel)),
-                    TargetVideoSize = targetFrameSize,
-                    DemuxerOptions = new ContainerOptions
-                    {
-                        FlagDiscardCorrupt = true,
-                    },
-                    StreamsToLoad = MediaMode.Video,
-                });
+                    FlagDiscardCorrupt = true,
+                },
+                StreamsToLoad = MediaMode.Video,
+            });
 
-                ImageData frame;
+            ImageData frame;
 
-                // Filter black frames
-                if (_options?.BlackFilterOptions != null &&
-                    _blackFrameFilter != null)
+            // Filter black frames
+            if (_options?.BlackFilterOptions != null &&
+                _blackFrameFilter != null)
+            {
+                bool isBlackFrame = false;
+
+                int decodedFramesCounter = 0;
+                do
                 {
-                    bool isBlackFrame = false;
-
-                    int decodedFramesCounter = 0;
-                    do
+                    if (file.Video.TryGetNextFrame(out frame))
                     {
-                        if (file.Video.TryGetNextFrame(out frame))
-                        {
-                            isBlackFrame = _blackFrameFilter.IsBlackFrame(frame);
-                        }
-                        else
-                        {
-                            break;
-                        }
-
-                        decodedFramesCounter++;
+                        isBlackFrame = _blackFrameFilter.IsBlackFrame(frame);
                     }
-                    while (isBlackFrame && decodedFramesCounter <= _options.BlackFilterOptions.FramesLimit);
-                }
-                else
-                {
-                    file.Video.TryGetNextFrame(out frame);
-                }
+                    else
+                    {
+                        break;
+                    }
 
-                return Image.LoadPixelData<TPixel>(frame.Data, frame.ImageSize.Width, frame.ImageSize.Height);
+                    decodedFramesCounter++;
+                }
+                while (isBlackFrame && decodedFramesCounter <= _options.BlackFilterOptions.FramesLimit);
             }
+            else
+            {
+                file.Video.TryGetNextFrame(out frame);
+            }
+
+            return Image.LoadPixelData<TPixel>(frame.Data, frame.ImageSize.Width, frame.ImageSize.Height);
         }
 
         public virtual Image Decode(Configuration configuration, Stream stream) => Decode<Rgb24>(configuration, stream);
@@ -175,20 +172,17 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
         public virtual IImageInfo? Identify(Configuration configuration, Stream stream)
         {
-            lock (syncRoot)
+            using var file = MediaFile.Open(stream, new MediaOptions
             {
-                using var file = MediaFile.Open(stream, new MediaOptions
-                {
-                    StreamsToLoad = MediaMode.Video
-                });
+                StreamsToLoad = MediaMode.Video
+            });
 
-                if (file.HasVideo)
-                {
-                    return new ImageInfo(file.Video.Info.FrameSize.Width, file.Video.Info.FrameSize.Height);
-                }
-
-                return null;
+            if (file.HasVideo)
+            {
+                return new ImageInfo(file.Video.Info.FrameSize.Width, file.Video.Info.FrameSize.Height);
             }
+
+            return null;
         }
 
         public virtual Task<IImageInfo?> IdentifyAsync(Configuration configuration, Stream stream, CancellationToken cancellationToken)
