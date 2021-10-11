@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
+using FFMediaToolkit;
+
 using FFmpeg.AutoGen;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Common
@@ -17,6 +19,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Common
                 string? libPath = FindFFmpegLibraryPath();
                 if (libPath != null)
                 {
+                    FFmpegLoader.FFmpegPath = libPath; // override default path(ffmpeg.RootPath)
                     FFmpegBinaries.Path = libPath;
                 }
             }
