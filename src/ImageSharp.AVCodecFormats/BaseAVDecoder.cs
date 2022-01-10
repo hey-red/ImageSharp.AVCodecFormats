@@ -16,7 +16,7 @@ using DrawingSize = System.Drawing.Size;
 
 namespace HeyRed.ImageSharp.AVCodecFormats
 {
-    public unsafe abstract class BaseAVDecoder : IImageDecoder, IImageInfoDetector
+    public abstract unsafe class BaseAVDecoder : IImageDecoder, IImageInfoDetector
     {
         private static readonly object syncRoot = new();
 
@@ -121,36 +121,31 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 StreamsToLoad = MediaMode.Video,
             });
 
-            ImageData frame;
+            ImageData lastDecodedFrame = default;
 
-            // Filter black frames
-            if (_options?.BlackFilterOptions != null &&
-                _blackFrameFilter != null)
+            int decodedFrames = 0;
+            while (file.Video.TryGetNextFrame(out var frame))
             {
-                bool isBlackFrame = false;
+                decodedFrames++;
 
-                int decodedFramesCounter = 0;
-                do
+                lastDecodedFrame = frame;
+
+                // Filter black frames
+                if (_blackFrameFilter != null &&
+                    decodedFrames < _options?.BlackFilterOptions!.FramesLimit)
                 {
-                    if (file.Video.TryGetNextFrame(out frame))
-                    {
-                        isBlackFrame = _blackFrameFilter.IsBlackFrame(frame);
-                    }
-                    else
-                    {
-                        break;
-                    }
-
-                    decodedFramesCounter++;
+                    if (_blackFrameFilter!.IsBlackFrame(frame)) continue;
                 }
-                while (isBlackFrame && decodedFramesCounter <= _options.BlackFilterOptions.FramesLimit);
-            }
-            else
-            {
-                file.Video.TryGetNextFrame(out frame);
+
+                break;
             }
 
-            return Image.LoadPixelData<TPixel>(frame.Data, frame.ImageSize.Width, frame.ImageSize.Height);
+            if (lastDecodedFrame.Data.IsEmpty)
+            {
+                throw new InvalidDataException("No frames found.");
+            }
+
+            return Image.LoadPixelData<TPixel>(lastDecodedFrame.Data, lastDecodedFrame.ImageSize.Width, lastDecodedFrame.ImageSize.Height);
         }
 
         public virtual Image Decode(Configuration configuration, Stream stream) => Decode<Rgb24>(configuration, stream);
