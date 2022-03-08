@@ -38,6 +38,30 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp4
                         subHeader[3] == 0x32        // 2
                     )
                     ||
+                    // 4
+                    (
+                        subHeader[0] == 0x69 &&     // i
+                        subHeader[1] == 0x73 &&     // s
+                        subHeader[2] == 0x6F &&     // o
+                        subHeader[3] == 0x34        // 4
+                    )
+                    ||
+                    // 5
+                    (
+                        subHeader[0] == 0x69 &&     // i
+                        subHeader[1] == 0x73 &&     // s
+                        subHeader[2] == 0x6F &&     // o
+                        subHeader[3] == 0x35        // 5
+                    )
+                    ||
+                    // 6
+                    (
+                        subHeader[0] == 0x69 &&     // i
+                        subHeader[1] == 0x73 &&     // s
+                        subHeader[2] == 0x6F &&     // o
+                        subHeader[3] == 0x36        // 6
+                    )
+                    ||
                     // MP4 Base w/ AVC ext [ISO 14496-12:2005]
                     (
                         subHeader[0] == 0x61 &&     // a
