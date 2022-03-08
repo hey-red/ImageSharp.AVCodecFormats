@@ -73,7 +73,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             {
                 (int targetWidth, int targetHeight) = _options.FrameSizeOptions.TargetFrameSize;
                 // Calculate frames size with aspect ratio
-                if (_options.FrameSizeOptions.PreserveAspectRation)
+                if (_options.FrameSizeOptions.PreserveAspectRatio)
                 {
                     IImageInfo? sourceInfo = Identify(configuration, stream);
                     if (sourceInfo is not null)

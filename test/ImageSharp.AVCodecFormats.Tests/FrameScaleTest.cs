@@ -33,7 +33,7 @@ namespace ImageSharp.AVCodecFormats.Tests
                 FrameSizeOptions = new FrameSizeOptions()
                 {
                     TargetFrameSize = new Size(100, 100),
-                    PreserveAspectRation = aspectRatio,
+                    PreserveAspectRatio = aspectRatio,
                 },
             };
 

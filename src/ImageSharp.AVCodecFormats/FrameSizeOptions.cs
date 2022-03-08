@@ -9,6 +9,6 @@ namespace HeyRed.ImageSharp.AVCodecFormats
         /// </summary>
         public Size TargetFrameSize { get; set; }
 
-        public bool PreserveAspectRation { get; set; } = false;
+        public bool PreserveAspectRatio { get; set; } = false;
     }
 }
