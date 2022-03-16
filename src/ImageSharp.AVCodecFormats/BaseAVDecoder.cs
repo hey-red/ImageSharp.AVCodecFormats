@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 using FFMediaToolkit.Decoding;
 using FFMediaToolkit.Graphics;
@@ -75,7 +74,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
                 // Calculate frames size with aspect ratio
                 if (_options.FrameSizeOptions.PreserveAspectRatio)
                 {
-                    IImageInfo? sourceInfo = Identify(configuration, stream);
+                    IImageInfo? sourceInfo = Identify(configuration, stream, CancellationToken.None);
                     if (sourceInfo is not null)
                     {
                         int size = Math.Max(targetWidth, targetHeight);
@@ -105,7 +104,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             _ => throw new ArgumentException("Unsupported pixel format."),
         };
 
-        public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream) where TPixel : unmanaged, IPixel<TPixel>
+        public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream, CancellationToken cancellationToken) where TPixel : unmanaged, IPixel<TPixel>
         {
             DrawingSize? targetFrameSize = CalculateTargetSize(configuration, stream);
 
@@ -148,24 +147,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats
             return Image.LoadPixelData<TPixel>(lastDecodedFrame.Data, lastDecodedFrame.ImageSize.Width, lastDecodedFrame.ImageSize.Height);
         }
 
-        public virtual Image Decode(Configuration configuration, Stream stream) => Decode<Rgb24>(configuration, stream);
+        public virtual Image Decode(Configuration configuration, Stream stream, CancellationToken cancellationToken) => Decode<Rgb24>(configuration, stream, cancellationToken);
 
-        public virtual Task<Image<TPixel>> DecodeAsync<TPixel>(Configuration configuration, Stream stream, CancellationToken cancellationToken)
-            where TPixel : unmanaged, IPixel<TPixel>
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            return Task.FromResult(Decode<TPixel>(configuration, stream));
-        }
-
-        public virtual Task<Image> DecodeAsync(Configuration configuration, Stream stream, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            return Task.FromResult(Decode(configuration, stream));
-        }
-
-        public virtual IImageInfo? Identify(Configuration configuration, Stream stream)
+        public virtual IImageInfo? Identify(Configuration configuration, Stream stream, CancellationToken cancellationToken)
         {
             using var file = MediaFile.Open(stream, new MediaOptions
             {
@@ -179,8 +163,5 @@ namespace HeyRed.ImageSharp.AVCodecFormats
 
             return null;
         }
-
-        public virtual Task<IImageInfo?> IdentifyAsync(Configuration configuration, Stream stream, CancellationToken cancellationToken)
-            => Task.FromResult(Identify(configuration, stream));
     }
 }
