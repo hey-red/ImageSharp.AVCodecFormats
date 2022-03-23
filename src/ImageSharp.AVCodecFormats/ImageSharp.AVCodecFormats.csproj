@@ -15,10 +15,15 @@
     <RepositoryUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>imagesharp;ffmpeg;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="FFMediaToolkit" Version="4.2.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>
