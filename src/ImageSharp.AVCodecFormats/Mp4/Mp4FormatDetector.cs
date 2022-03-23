@@ -93,6 +93,13 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp4
                         subHeader[1] == 0x61 &&     // a
                         subHeader[2] == 0x73 &&     // s
                         subHeader[3] == 0x68        // h
+                    )
+                    ||
+                    // Apple M4V
+                    (
+                        subHeader[0] == 0x4D &&     // M
+                        subHeader[1] == 0x34 &&     // 4
+                        subHeader[2] == 0x56        // V
                     );
             }
 
