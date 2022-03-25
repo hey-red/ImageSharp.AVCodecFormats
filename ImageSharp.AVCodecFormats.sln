@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30517.126
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageSharp.AVCodecFormats", "src\ImageSharp.AVCodecFormats\ImageSharp.AVCodecFormats.csproj", "{2040DBC4-B6A4-48D5-B115-F37C243237C8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageSharp.AVCodecFormats.Tests", "test\ImageSharp.AVCodecFormats.Tests\ImageSharp.AVCodecFormats.Tests.csproj", "{5CF43797-E0DF-4498-8E7A-614F1641DB36}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Build", "build\Build.csproj", "{167F644C-6FB3-4D2A-8074-321B696E5877}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FFMediaToolkit", "FFMediaToolkit\FFMediaToolkit\FFMediaToolkit.csproj", "{956411F4-6150-4F02-8DE7-C5AA954E5448}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,14 @@ Global
 		{167F644C-6FB3-4D2A-8074-321B696E5877}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{167F644C-6FB3-4D2A-8074-321B696E5877}.Release|x64.ActiveCfg = Release|Any CPU
 		{167F644C-6FB3-4D2A-8074-321B696E5877}.Release|x64.Build.0 = Release|Any CPU
+		{956411F4-6150-4F02-8DE7-C5AA954E5448}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{956411F4-6150-4F02-8DE7-C5AA954E5448}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{956411F4-6150-4F02-8DE7-C5AA954E5448}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{956411F4-6150-4F02-8DE7-C5AA954E5448}.Debug|x64.Build.0 = Debug|Any CPU
+		{956411F4-6150-4F02-8DE7-C5AA954E5448}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{956411F4-6150-4F02-8DE7-C5AA954E5448}.Release|Any CPU.Build.0 = Release|Any CPU
+		{956411F4-6150-4F02-8DE7-C5AA954E5448}.Release|x64.ActiveCfg = Release|Any CPU
+		{956411F4-6150-4F02-8DE7-C5AA954E5448}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
