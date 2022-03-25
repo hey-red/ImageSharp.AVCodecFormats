@@ -1,0 +1,3 @@
+[submodule "FFMediaToolkit"]
+	path = FFMediaToolkit
+	url = https://github.com/hey-red/FFMediaToolkit.git
