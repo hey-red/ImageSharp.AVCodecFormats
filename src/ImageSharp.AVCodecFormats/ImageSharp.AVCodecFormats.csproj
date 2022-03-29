@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FFmpeg.AutoGen" Version="5.0.0" PrivateAssets="All" />
+    <PackageReference Include="FFmpeg.AutoGen" Version="5.0.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.0" />
   </ItemGroup>
 
