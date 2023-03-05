@@ -3,7 +3,7 @@
   <Import Project="./package.props" /> 
   
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <version>3.0.8</version>
     <Authors>red</Authors>
     <RootNamespace>HeyRed.ImageSharp.AVCodecFormats</RootNamespace>
