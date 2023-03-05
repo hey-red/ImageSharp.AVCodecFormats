@@ -1,34 +1,33 @@
 ﻿using FFMediaToolkit.Graphics;
 
-namespace HeyRed.ImageSharp.AVCodecFormats
+namespace HeyRed.ImageSharp.AVCodecFormats;
+
+internal class BlackFrameFilter
 {
-    internal class BlackFrameFilter
+    private readonly BlackFrameFilterOptions _options;
+
+    public BlackFrameFilter(BlackFrameFilterOptions options)
     {
-        private readonly BlackFrameFilterOptions _options;
+        _options = options;
+    }
 
-        public BlackFrameFilter(BlackFrameFilterOptions options)
+    public bool IsBlackFrame(ImageData frame)
+    {
+        int numBlackPix = 0;
+
+        for (int i = 0; i < frame.ImageSize.Height; i++)
         {
-            _options = options;
-        }
-
-        public bool IsBlackFrame(ImageData frame)
-        {
-            int numBlackPix = 0;
-
-            for (int i = 0; i < frame.ImageSize.Height; i++)
+            for (int x = 0; x < frame.ImageSize.Width; x++)
             {
-                for (int x = 0; x < frame.ImageSize.Width; x++)
+                if (frame.Data[x] < _options.FrameThreshold)
                 {
-                    if (frame.Data[x] < _options.FrameThreshold)
-                    {
-                        numBlackPix++;
-                    }
+                    numBlackPix++;
                 }
             }
-
-            int blackPercent = numBlackPix * 100 / (frame.ImageSize.Width * frame.ImageSize.Height);
-
-            return blackPercent >= _options.FrameAmount;
         }
+
+        int blackPercent = numBlackPix * 100 / (frame.ImageSize.Width * frame.ImageSize.Height);
+
+        return blackPercent >= _options.FrameAmount;
     }
 }

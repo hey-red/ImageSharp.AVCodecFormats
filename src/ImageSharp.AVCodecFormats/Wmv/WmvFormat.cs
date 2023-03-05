@@ -2,24 +2,23 @@
 
 using SixLabors.ImageSharp.Formats;
 
-namespace HeyRed.ImageSharp.AVCodecFormats.Wmv
+namespace HeyRed.ImageSharp.AVCodecFormats.Wmv;
+
+public sealed class WmvFormat : IImageFormat<WmvMetadata>
 {
-    public sealed class WmvFormat : IImageFormat<WmvMetadata>
+    private WmvFormat()
     {
-        private WmvFormat()
-        {
-        }
-
-        public static WmvFormat Instance { get; } = new();
-
-        public string Name => "Windows Media Video";
-
-        public string DefaultMimeType => "video/x-ms-wmv";
-
-        public IEnumerable<string> MimeTypes => new[] { "video/x-ms-wmv", };
-
-        public IEnumerable<string> FileExtensions => new[] { "wmv" };
-
-        public WmvMetadata CreateDefaultFormatMetadata() => new();
     }
+
+    public static WmvFormat Instance { get; } = new();
+
+    public string Name => "Windows Media Video";
+
+    public string DefaultMimeType => "video/x-ms-wmv";
+
+    public IEnumerable<string> MimeTypes => new[] { "video/x-ms-wmv", };
+
+    public IEnumerable<string> FileExtensions => new[] { "wmv" };
+
+    public WmvMetadata CreateDefaultFormatMetadata() => new();
 }

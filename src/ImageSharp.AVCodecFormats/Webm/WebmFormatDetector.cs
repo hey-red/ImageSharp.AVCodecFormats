@@ -5,28 +5,27 @@ using HeyRed.ImageSharp.AVCodecFormats.Common;
 
 using SixLabors.ImageSharp.Formats;
 
-namespace HeyRed.ImageSharp.AVCodecFormats.Webm
+namespace HeyRed.ImageSharp.AVCodecFormats.Webm;
+
+public sealed class WebmFormatDetector : IImageFormatDetector
 {
-    public sealed class WebmFormatDetector : IImageFormatDetector
+    private static readonly byte[] _webmMarker = Encoding.ASCII.GetBytes("webm");
+
+    public int HeaderSize => 39;
+
+    public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
     {
-        private static readonly byte[] _webmMarker = Encoding.ASCII.GetBytes("webm");
+        return IsSupportedFileFormat(header) ? WebmFormat.Instance : null;
+    }
 
-        public int HeaderSize => 39;
-
-        public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
+    private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
+    {
+        if (header.Length >= HeaderSize &&
+            FormatDetectorUtils.IsMkvOrWebmHeader(header))
         {
-            return IsSupportedFileFormat(header) ? WebmFormat.Instance : null;
+            return header.Slice(4).IndexOf(_webmMarker) > -1;
         }
 
-        private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
-        {
-            if (header.Length >= HeaderSize &&
-                FormatDetectorUtils.IsMkvOrWebmHeader(header))
-            {
-                return header.Slice(4).IndexOf(_webmMarker) > -1;
-            }
-
-            return false;
-        }
+        return false;
     }
 }

@@ -1,13 +1,12 @@
-﻿namespace HeyRed.ImageSharp.AVCodecFormats.Wmv
-{
-    public sealed class WmvDecoder : BaseAVDecoder
-    {
-        public WmvDecoder() : base()
-        {
-        }
+﻿namespace HeyRed.ImageSharp.AVCodecFormats.Wmv;
 
-        public WmvDecoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
-        {
-        }
+public sealed class WmvDecoder : BaseAVDecoder
+{
+    public WmvDecoder() : base()
+    {
+    }
+
+    public WmvDecoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
+    {
     }
 }

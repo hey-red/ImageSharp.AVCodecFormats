@@ -2,30 +2,29 @@
 
 using SixLabors.ImageSharp.Formats;
 
-namespace HeyRed.ImageSharp.AVCodecFormats.MpegTs
+namespace HeyRed.ImageSharp.AVCodecFormats.MpegTs;
+
+public sealed class MpegTsFormatDetector : IImageFormatDetector
 {
-    public sealed class MpegTsFormatDetector : IImageFormatDetector
+    private const int G_MARK = 0x47;
+
+    public int HeaderSize => 189;
+
+    public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
     {
-        private const int G_MARK = 0x47;
+        return IsSupportedFileFormat(header) ? MpegTsFormat.Instance : null;
+    }
 
-        public int HeaderSize => 189;
-
-        public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
+    private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
+    {
+        if (header.Length >= HeaderSize)
         {
-            return IsSupportedFileFormat(header) ? MpegTsFormat.Instance : null;
+            // Every 188
+            return
+                header[0] == G_MARK &&  // G
+                header[188] == G_MARK;  // G
         }
 
-        private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
-        {
-            if (header.Length >= HeaderSize)
-            {
-                // Every 188
-                return
-                    header[0] == G_MARK &&  // G
-                    header[188] == G_MARK;  // G
-            }
-
-            return false;
-        }
+        return false;
     }
 }

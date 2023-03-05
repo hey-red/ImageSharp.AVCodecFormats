@@ -13,155 +13,154 @@ using SixLabors.ImageSharp.PixelFormats;
 
 using DrawingSize = System.Drawing.Size;
 
-namespace HeyRed.ImageSharp.AVCodecFormats
+namespace HeyRed.ImageSharp.AVCodecFormats;
+
+public abstract unsafe class BaseAVDecoder : IImageDecoder, IImageInfoDetector
 {
-    public abstract unsafe class BaseAVDecoder : IImageDecoder, IImageInfoDetector
+    private static readonly object syncRoot = new();
+
+    private static bool _initBinaries = false;
+
+    private readonly BlackFrameFilter? _blackFrameFilter;
+
+    protected BaseAVDecoder(IAVDecoderOptions decoderOptions) : this()
     {
-        private static readonly object syncRoot = new();
+        _options = decoderOptions ?? throw new ArgumentNullException(nameof(decoderOptions));
 
-        private static bool _initBinaries = false;
-
-        private readonly BlackFrameFilter? _blackFrameFilter;
-
-        protected BaseAVDecoder(IAVDecoderOptions decoderOptions) : this()
+        if (_options.BlackFilterOptions != null)
         {
-            _options = decoderOptions ?? throw new ArgumentNullException(nameof(decoderOptions));
+            _blackFrameFilter = new BlackFrameFilter(_options.BlackFilterOptions);
+        }
+    }
 
-            if (_options.BlackFilterOptions != null)
+    protected BaseAVDecoder()
+    {
+        if (_initBinaries) return;
+
+        lock (syncRoot)
+        {
+            if (!_initBinaries)
             {
-                _blackFrameFilter = new BlackFrameFilter(_options.BlackFilterOptions);
+                FFmpegBinariesFinder.FindBinaries();
+
+                _initBinaries = true;
             }
         }
+    }
 
-        protected BaseAVDecoder()
+    private readonly IAVDecoderOptions? _options;
+
+    private DrawingSize CalculateSizeWithAspectRatio(Size sourceSize, int size)
+    {
+        double ratio = 1;
+        if (sourceSize.Width > size || sourceSize.Height > size)
         {
-            if (_initBinaries) return;
-
-            lock (syncRoot)
-            {
-                if (!_initBinaries)
-                {
-                    FFmpegBinariesFinder.FindBinaries();
-
-                    _initBinaries = true;
-                }
-            }
+            var ratioX = size / (double)sourceSize.Width;
+            var ratioY = size / (double)sourceSize.Height;
+            ratio = Math.Min(ratioX, ratioY);
         }
 
-        private readonly IAVDecoderOptions? _options;
+        return new(
+            (int)Math.Round(sourceSize.Width * ratio),
+            (int)Math.Round(sourceSize.Height * ratio));
+    }
 
-        private DrawingSize CalculateSizeWithAspectRatio(Size sourceSize, int size)
+    private DrawingSize? CalculateTargetSize(Configuration configuration, Stream stream)
+    {
+        DrawingSize? targetFrameSize = null;
+        if (_options?.FrameSizeOptions != null)
         {
-            double ratio = 1;
-            if (sourceSize.Width > size || sourceSize.Height > size)
+            (int targetWidth, int targetHeight) = _options.FrameSizeOptions.TargetFrameSize;
+            // Calculate frames size with aspect ratio
+            if (_options.FrameSizeOptions.PreserveAspectRatio)
             {
-                var ratioX = size / (double)sourceSize.Width;
-                var ratioY = size / (double)sourceSize.Height;
-                ratio = Math.Min(ratioX, ratioY);
-            }
-
-            return new(
-                (int)Math.Round(sourceSize.Width * ratio),
-                (int)Math.Round(sourceSize.Height * ratio));
-        }
-
-        private DrawingSize? CalculateTargetSize(Configuration configuration, Stream stream)
-        {
-            DrawingSize? targetFrameSize = null;
-            if (_options?.FrameSizeOptions != null)
-            {
-                (int targetWidth, int targetHeight) = _options.FrameSizeOptions.TargetFrameSize;
-                // Calculate frames size with aspect ratio
-                if (_options.FrameSizeOptions.PreserveAspectRatio)
+                IImageInfo? sourceInfo = Identify(configuration, stream, CancellationToken.None);
+                if (sourceInfo is not null)
                 {
-                    IImageInfo? sourceInfo = Identify(configuration, stream, CancellationToken.None);
-                    if (sourceInfo is not null)
-                    {
-                        int size = Math.Max(targetWidth, targetHeight);
-                        targetFrameSize = CalculateSizeWithAspectRatio(new Size(sourceInfo.Width, sourceInfo.Height), size);
-                    }
-
-                    if (stream.CanSeek)
-                    {
-                        stream.Position = 0;
-                    }
-                }
-                else
-                {
-                    targetFrameSize = new DrawingSize(targetWidth, targetHeight);
-                }
-            }
-            return targetFrameSize;
-        }
-
-        private ImagePixelFormat MapPixelFormat<TPixel>(TPixel sourcePixelFormat) => sourcePixelFormat switch
-        {
-            Rgb24 _ => ImagePixelFormat.Rgb24,
-            Bgr24 _ => ImagePixelFormat.Bgr24,
-            Rgba32 _ => ImagePixelFormat.Rgba32,
-            Argb32 _ => ImagePixelFormat.Argb32,
-            Bgra32 _ => ImagePixelFormat.Bgra32,
-            _ => throw new ArgumentException("Unsupported pixel format."),
-        };
-
-        public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream, CancellationToken cancellationToken) where TPixel : unmanaged, IPixel<TPixel>
-        {
-            DrawingSize? targetFrameSize = CalculateTargetSize(configuration, stream);
-
-            using var file = MediaFile.Open(stream, new MediaOptions
-            {
-                // Map imagesharp pixel format to ffmpeg pixel format
-                VideoPixelFormat = MapPixelFormat(default(TPixel)),
-                TargetVideoSize = targetFrameSize,
-                DemuxerOptions = new ContainerOptions
-                {
-                    FlagDiscardCorrupt = true,
-                },
-                StreamsToLoad = MediaMode.Video,
-            });
-
-            ImageData lastDecodedFrame = default;
-
-            int decodedFrames = 0;
-            while (file.Video.TryGetNextFrame(out var frame))
-            {
-                decodedFrames++;
-
-                lastDecodedFrame = frame;
-
-                // Filter black frames
-                if (_blackFrameFilter != null &&
-                    decodedFrames < _options?.BlackFilterOptions!.FramesLimit)
-                {
-                    if (_blackFrameFilter!.IsBlackFrame(frame)) continue;
+                    int size = Math.Max(targetWidth, targetHeight);
+                    targetFrameSize = CalculateSizeWithAspectRatio(new Size(sourceInfo.Width, sourceInfo.Height), size);
                 }
 
-                break;
+                if (stream.CanSeek)
+                {
+                    stream.Position = 0;
+                }
             }
-
-            if (lastDecodedFrame.Data.IsEmpty)
+            else
             {
-                throw new InvalidDataException("No frames found.");
+                targetFrameSize = new DrawingSize(targetWidth, targetHeight);
             }
-
-            return Image.LoadPixelData<TPixel>(lastDecodedFrame.Data, lastDecodedFrame.ImageSize.Width, lastDecodedFrame.ImageSize.Height);
         }
+        return targetFrameSize;
+    }
 
-        public virtual Image Decode(Configuration configuration, Stream stream, CancellationToken cancellationToken) => Decode<Rgb24>(configuration, stream, cancellationToken);
+    private ImagePixelFormat MapPixelFormat<TPixel>(TPixel sourcePixelFormat) => sourcePixelFormat switch
+    {
+        Rgb24 _ => ImagePixelFormat.Rgb24,
+        Bgr24 _ => ImagePixelFormat.Bgr24,
+        Rgba32 _ => ImagePixelFormat.Rgba32,
+        Argb32 _ => ImagePixelFormat.Argb32,
+        Bgra32 _ => ImagePixelFormat.Bgra32,
+        _ => throw new ArgumentException("Unsupported pixel format."),
+    };
 
-        public virtual IImageInfo? Identify(Configuration configuration, Stream stream, CancellationToken cancellationToken)
+    public virtual Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream, CancellationToken cancellationToken) where TPixel : unmanaged, IPixel<TPixel>
+    {
+        DrawingSize? targetFrameSize = CalculateTargetSize(configuration, stream);
+
+        using var file = MediaFile.Open(stream, new MediaOptions
         {
-            using var file = MediaFile.Open(stream, new MediaOptions
+            // Map imagesharp pixel format to ffmpeg pixel format
+            VideoPixelFormat = MapPixelFormat(default(TPixel)),
+            TargetVideoSize = targetFrameSize,
+            DemuxerOptions = new ContainerOptions
             {
-                StreamsToLoad = MediaMode.Video
-            });
+                FlagDiscardCorrupt = true,
+            },
+            StreamsToLoad = MediaMode.Video,
+        });
 
-            if (file.HasVideo)
+        ImageData lastDecodedFrame = default;
+
+        int decodedFrames = 0;
+        while (file.Video.TryGetNextFrame(out var frame))
+        {
+            decodedFrames++;
+
+            lastDecodedFrame = frame;
+
+            // Filter black frames
+            if (_blackFrameFilter != null &&
+                decodedFrames < _options?.BlackFilterOptions!.FramesLimit)
             {
-                return new ImageInfo(file.Video.Info.FrameSize.Width, file.Video.Info.FrameSize.Height);
+                if (_blackFrameFilter!.IsBlackFrame(frame)) continue;
             }
 
-            return null;
+            break;
         }
+
+        if (lastDecodedFrame.Data.IsEmpty)
+        {
+            throw new InvalidDataException("No frames found.");
+        }
+
+        return Image.LoadPixelData<TPixel>(lastDecodedFrame.Data, lastDecodedFrame.ImageSize.Width, lastDecodedFrame.ImageSize.Height);
+    }
+
+    public virtual Image Decode(Configuration configuration, Stream stream, CancellationToken cancellationToken) => Decode<Rgb24>(configuration, stream, cancellationToken);
+
+    public virtual IImageInfo? Identify(Configuration configuration, Stream stream, CancellationToken cancellationToken)
+    {
+        using var file = MediaFile.Open(stream, new MediaOptions
+        {
+            StreamsToLoad = MediaMode.Video
+        });
+
+        if (file.HasVideo)
+        {
+            return new ImageInfo(file.Video.Info.FrameSize.Width, file.Video.Info.FrameSize.Height);
+        }
+
+        return null;
     }
 }

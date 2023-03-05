@@ -1,13 +1,12 @@
-﻿namespace HeyRed.ImageSharp.AVCodecFormats.Mkv
-{
-    public sealed class MkvDecoder : BaseAVDecoder
-    {
-        public MkvDecoder() : base()
-        {
-        }
+﻿namespace HeyRed.ImageSharp.AVCodecFormats.Mkv;
 
-        public MkvDecoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
-        {
-        }
+public sealed class MkvDecoder : BaseAVDecoder
+{
+    public MkvDecoder() : base()
+    {
+    }
+
+    public MkvDecoder(IAVDecoderOptions decoderOptions) : base(decoderOptions)
+    {
     }
 }

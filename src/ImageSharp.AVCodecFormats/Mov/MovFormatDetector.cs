@@ -4,31 +4,30 @@ using HeyRed.ImageSharp.AVCodecFormats.Common;
 
 using SixLabors.ImageSharp.Formats;
 
-namespace HeyRed.ImageSharp.AVCodecFormats.Mov
+namespace HeyRed.ImageSharp.AVCodecFormats.Mov;
+
+/// <summary>
+/// TODO: mdat, wide etc.
+/// </summary>
+public sealed class MovFormatDetector : IImageFormatDetector
 {
-    /// <summary>
-    /// TODO: mdat, wide etc.
-    /// </summary>
-    public sealed class MovFormatDetector : IImageFormatDetector
+    public int HeaderSize => 10;
+
+    public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
     {
-        public int HeaderSize => 10;
+        return IsSupportedFileFormat(header) ? MovFormat.Instance : null;
+    }
 
-        public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
+    private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
+    {
+        if (header.Length >= HeaderSize &&
+            FormatDetectorUtils.IsMp4OrMovHeader(header.Slice(4)))
         {
-            return IsSupportedFileFormat(header) ? MovFormat.Instance : null;
+            return
+                header[8] == 0x71 &&    // q
+                header[9] == 0x74;      // t
         }
 
-        private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
-        {
-            if (header.Length >= HeaderSize &&
-                FormatDetectorUtils.IsMp4OrMovHeader(header.Slice(4)))
-            {
-                return
-                    header[8] == 0x71 &&    // q
-                    header[9] == 0x74;      // t
-            }
-
-            return false;
-        }
+        return false;
     }
 }

@@ -1,9 +1,8 @@
 ﻿using SixLabors.ImageSharp;
 
-namespace HeyRed.ImageSharp.AVCodecFormats.Avi
+namespace HeyRed.ImageSharp.AVCodecFormats.Avi;
+
+public sealed class AviMetadata : IDeepCloneable
 {
-    public sealed class AviMetadata : IDeepCloneable
-    {
-        public IDeepCloneable DeepClone() => new AviMetadata();
-    }
+    public IDeepCloneable DeepClone() => new AviMetadata();
 }
