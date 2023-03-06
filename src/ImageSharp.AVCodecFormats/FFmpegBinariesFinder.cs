@@ -8,7 +8,7 @@ using FFMediaToolkit;
 
 using FFmpeg.AutoGen;
 
-namespace HeyRed.ImageSharp.AVCodecFormats.Common;
+namespace HeyRed.ImageSharp.AVCodecFormats;
 
 internal static class FFmpegBinariesFinder
 {

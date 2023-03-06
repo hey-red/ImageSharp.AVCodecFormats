@@ -1,23 +1,16 @@
 ﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Mov;
 
-public sealed class MovConfigurationModule : IConfigurationModule
+public sealed class MovConfigurationModule : IImageFormatConfigurationModule
 {
-    private readonly IAVDecoderOptions? _decoderOptions;
-
-    public MovConfigurationModule()
-    {
-    }
-
-    public MovConfigurationModule(IAVDecoderOptions decoderOptions) => _decoderOptions = decoderOptions;
-
+    /// <summary>
+    /// Registers the image encoders, decoders and mime type detectors for the mov format.
+    /// </summary>
     public void Configure(Configuration configuration)
     {
-        configuration.ImageFormatsManager.SetDecoder(MovFormat.Instance, _decoderOptions == null ?
-            new MovDecoder() :
-            new MovDecoder(_decoderOptions));
-
+        configuration.ImageFormatsManager.SetDecoder(MovFormat.Instance, AVDecoder.Instance);
         configuration.ImageFormatsManager.AddImageFormatDetector(new MovFormatDetector());
     }
 }

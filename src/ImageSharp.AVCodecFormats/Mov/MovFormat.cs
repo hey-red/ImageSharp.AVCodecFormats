@@ -16,9 +16,9 @@ public sealed class MovFormat : IImageFormat<MovMetadata>
 
     public string DefaultMimeType => "video/quicktime";
 
-    public IEnumerable<string> MimeTypes => new[] { "video/quicktime", };
+    public IEnumerable<string> MimeTypes => MovConstants.MimeTypes;
 
-    public IEnumerable<string> FileExtensions => new[] { "mov" };
+    public IEnumerable<string> FileExtensions => MovConstants.FileExtensions;
 
     public MovMetadata CreateDefaultFormatMetadata() => new();
 }

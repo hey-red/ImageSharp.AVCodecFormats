@@ -16,9 +16,9 @@ public sealed class MkvFormat : IImageFormat<MkvMetadata>
 
     public string DefaultMimeType => "video/x-matroska";
 
-    public IEnumerable<string> MimeTypes => new[] { "video/x-matroska", "audio/x-matroska", };
+    public IEnumerable<string> MimeTypes => MkvConstants.MimeTypes;
 
-    public IEnumerable<string> FileExtensions => new[] { "mkv" };
+    public IEnumerable<string> FileExtensions => MkvConstants.FileExtensions;
 
     public MkvMetadata CreateDefaultFormatMetadata() => new();
 }

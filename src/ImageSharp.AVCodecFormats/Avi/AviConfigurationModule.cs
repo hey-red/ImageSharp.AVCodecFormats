@@ -1,23 +1,16 @@
 ﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Avi;
 
-public sealed class AviConfigurationModule : IConfigurationModule
+public sealed class AviConfigurationModule : IImageFormatConfigurationModule
 {
-    private readonly IAVDecoderOptions? _decoderOptions;
-
-    public AviConfigurationModule()
-    {
-    }
-
-    public AviConfigurationModule(IAVDecoderOptions decoderOptions) => _decoderOptions = decoderOptions;
-
+    /// <summary>
+    /// Registers the image encoders, decoders and mime type detectors for the avi format.
+    /// </summary>
     public void Configure(Configuration configuration)
     {
-        configuration.ImageFormatsManager.SetDecoder(AviFormat.Instance, _decoderOptions == null ?
-            new AviDecoder() :
-            new AviDecoder(_decoderOptions));
-
+        configuration.ImageFormatsManager.SetDecoder(AviFormat.Instance, AVDecoder.Instance);
         configuration.ImageFormatsManager.AddImageFormatDetector(new AviFormatDetector());
     }
 }

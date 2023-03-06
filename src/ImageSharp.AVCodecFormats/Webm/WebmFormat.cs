@@ -16,9 +16,9 @@ public sealed class WebmFormat : IImageFormat<WebmMetadata>
 
     public string DefaultMimeType => "video/webm";
 
-    public IEnumerable<string> MimeTypes => new[] { "video/webm", "audio/webm", };
+    public IEnumerable<string> MimeTypes => WebmConstants.MimeTypes;
 
-    public IEnumerable<string> FileExtensions => new[] { "webm" };
+    public IEnumerable<string> FileExtensions => WebmConstants.FileExtensions;
 
     public WebmMetadata CreateDefaultFormatMetadata() => new();
 }

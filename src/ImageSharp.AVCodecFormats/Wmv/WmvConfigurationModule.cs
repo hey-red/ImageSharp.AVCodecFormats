@@ -1,23 +1,16 @@
 ﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Wmv;
 
-public sealed class WmvConfigurationModule : IConfigurationModule
+public sealed class WmvConfigurationModule : IImageFormatConfigurationModule
 {
-    private readonly IAVDecoderOptions? _decoderOptions;
-
-    public WmvConfigurationModule()
-    {
-    }
-
-    public WmvConfigurationModule(IAVDecoderOptions decoderOptions) => _decoderOptions = decoderOptions;
-
+    /// <summary>
+    /// Registers the image encoders, decoders and mime type detectors for the wmv format.
+    /// </summary>
     public void Configure(Configuration configuration)
     {
-        configuration.ImageFormatsManager.SetDecoder(WmvFormat.Instance, _decoderOptions == null ?
-            new WmvDecoder() :
-            new WmvDecoder(_decoderOptions));
-
+        configuration.ImageFormatsManager.SetDecoder(WmvFormat.Instance, AVDecoder.Instance);
         configuration.ImageFormatsManager.AddImageFormatDetector(new WmvFormatDetector());
     }
 }

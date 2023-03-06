@@ -16,9 +16,9 @@ public sealed class MpegTsFormat : IImageFormat<MpegTsMetadata>
 
     public string DefaultMimeType => "video/MP2T";
 
-    public IEnumerable<string> MimeTypes => new[] { "video/MP2T", };
+    public IEnumerable<string> MimeTypes => MpegTsConstants.MimeTypes;
 
-    public IEnumerable<string> FileExtensions => new[] { "ts", "tsv", "tsa" };
+    public IEnumerable<string> FileExtensions => MpegTsConstants.FileExtensions;
 
     public MpegTsMetadata CreateDefaultFormatMetadata() => new();
 }

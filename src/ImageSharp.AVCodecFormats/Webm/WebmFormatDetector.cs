@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
-using HeyRed.ImageSharp.AVCodecFormats.Common;
+using HeyRed.ImageSharp.AVCodecFormats.Mkv;
 
 using SixLabors.ImageSharp.Formats;
 
@@ -9,21 +9,22 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Webm;
 
 public sealed class WebmFormatDetector : IImageFormatDetector
 {
-    private static readonly byte[] _webmMarker = Encoding.ASCII.GetBytes("webm");
-
     public int HeaderSize => 39;
 
-    public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
+    public bool TryDetectFormat(ReadOnlySpan<byte> header, [NotNullWhen(true)] out IImageFormat? format)
     {
-        return IsSupportedFileFormat(header) ? WebmFormat.Instance : null;
+        format = IsSupportedFileFormat(header) ? MkvFormat.Instance : null;
+
+        return format != null;
     }
 
     private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
     {
-        if (header.Length >= HeaderSize &&
-            FormatDetectorUtils.IsMkvOrWebmHeader(header))
+        if (header.Length >= HeaderSize)
         {
-            return header.Slice(4).IndexOf(_webmMarker) > -1;
+            return
+                header[..4].SequenceEqual(WebmConstants.WebmContainerStart) &&
+                header[4..].IndexOf(WebmConstants.WebmMarker) > -1;
         }
 
         return false;

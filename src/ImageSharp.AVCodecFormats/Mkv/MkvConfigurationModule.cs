@@ -1,23 +1,16 @@
 ﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Mkv;
 
-public sealed class MkvConfigurationModule : IConfigurationModule
+public sealed class MkvConfigurationModule : IImageFormatConfigurationModule
 {
-    private readonly IAVDecoderOptions? _decoderOptions;
-
-    public MkvConfigurationModule()
-    {
-    }
-
-    public MkvConfigurationModule(IAVDecoderOptions decoderOptions) => _decoderOptions = decoderOptions;
-
+    /// <summary>
+    /// Registers the image encoders, decoders and mime type detectors for the mkv format.
+    /// </summary>
     public void Configure(Configuration configuration)
     {
-        configuration.ImageFormatsManager.SetDecoder(MkvFormat.Instance, _decoderOptions == null ?
-            new MkvDecoder() :
-            new MkvDecoder(_decoderOptions));
-
+        configuration.ImageFormatsManager.SetDecoder(MkvFormat.Instance, AVDecoder.Instance);
         configuration.ImageFormatsManager.AddImageFormatDetector(new MkvFormatDetector());
     }
 }

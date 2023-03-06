@@ -16,9 +16,9 @@ public sealed class Mp3Format : IImageFormat<Mp3Metadata>
 
     public string DefaultMimeType => "audio/mpeg";
 
-    public IEnumerable<string> MimeTypes => new[] { "audio/mpeg", };
+    public IEnumerable<string> MimeTypes => Mp3Constants.MimeTypes;
 
-    public IEnumerable<string> FileExtensions => new[] { "mp3", "mpga" };
+    public IEnumerable<string> FileExtensions => Mp3Constants.FileExtensions;
 
     public Mp3Metadata CreateDefaultFormatMetadata() => new();
 }

@@ -10,15 +10,18 @@ public sealed class AviFormat : IImageFormat<AviMetadata>
     {
     }
 
+    /// <summary>
+    /// Gets the current instance.
+    /// </summary>
     public static AviFormat Instance { get; } = new();
 
     public string Name => "AVI";
 
     public string DefaultMimeType => "video/avi";
 
-    public IEnumerable<string> MimeTypes => new[] { "video/avi", "video/msvideo", "video/x-msvideo", };
+    public IEnumerable<string> MimeTypes => AviConstants.MimeTypes;
 
-    public IEnumerable<string> FileExtensions => new[] { "avi" };
+    public IEnumerable<string> FileExtensions => AviConstants.FileExtensions;
 
     public AviMetadata CreateDefaultFormatMetadata() => new();
 }

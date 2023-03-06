@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using SixLabors.ImageSharp.Formats;
 
@@ -8,9 +9,11 @@ public sealed class WmvFormatDetector : IImageFormatDetector
 {
     public int HeaderSize => 16;
 
-    public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
+    public bool TryDetectFormat(ReadOnlySpan<byte> header, [NotNullWhen(true)] out IImageFormat? format)
     {
-        return IsSupportedFileFormat(header) ? WmvFormat.Instance : null;
+        format = IsSupportedFileFormat(header) ? WmvFormat.Instance : null;
+
+        return format != null;
     }
 
     private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)

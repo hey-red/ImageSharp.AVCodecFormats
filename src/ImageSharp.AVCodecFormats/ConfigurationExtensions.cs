@@ -26,18 +26,4 @@ public static class ConfigurationExtensions
 
         return configuration;
     }
-
-    public static Configuration WithAVDecoders(this Configuration configuration, IAVDecoderOptions options)
-    {
-        configuration.Configure(new AviConfigurationModule(options));
-        configuration.Configure(new MkvConfigurationModule(options));
-        configuration.Configure(new MovConfigurationModule(options));
-        configuration.Configure(new Mp4ConfigurationModule(options));
-        configuration.Configure(new WebmConfigurationModule(options));
-        configuration.Configure(new WmvConfigurationModule(options));
-        configuration.Configure(new MpegTsConfigurationModule(options));
-        configuration.Configure(new Mp3ConfigurationModule(options));
-
-        return configuration;
-    }
 }

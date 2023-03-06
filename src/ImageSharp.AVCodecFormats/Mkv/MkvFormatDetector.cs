@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Text;
-
-using HeyRed.ImageSharp.AVCodecFormats.Common;
+using System.Diagnostics.CodeAnalysis;
 
 using SixLabors.ImageSharp.Formats;
 
@@ -9,21 +7,22 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mkv;
 
 public sealed class MkvFormatDetector : IImageFormatDetector
 {
-    private static readonly byte[] _matroskaMarker = Encoding.ASCII.GetBytes("matroska");
-
     public int HeaderSize => 39;
 
-    public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
+    public bool TryDetectFormat(ReadOnlySpan<byte> header, [NotNullWhen(true)] out IImageFormat? format)
     {
-        return IsSupportedFileFormat(header) ? MkvFormat.Instance : null;
+        format = IsSupportedFileFormat(header) ? MkvFormat.Instance : null;
+
+        return format != null;
     }
 
     private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
     {
-        if (header.Length >= HeaderSize &&
-            FormatDetectorUtils.IsMkvOrWebmHeader(header))
+        if (header.Length >= HeaderSize)
         {
-            return header.Slice(4).IndexOf(_matroskaMarker) > -1;
+            return
+                header[..4].SequenceEqual(MkvConstants.MkvContainerStart) &&
+                header[4..].IndexOf(MkvConstants.MatroskaMarker) > -1;
         }
 
         return false;

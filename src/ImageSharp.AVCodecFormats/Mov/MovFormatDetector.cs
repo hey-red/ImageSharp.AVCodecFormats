@@ -1,6 +1,5 @@
 ﻿using System;
-
-using HeyRed.ImageSharp.AVCodecFormats.Common;
+using System.Diagnostics.CodeAnalysis;
 
 using SixLabors.ImageSharp.Formats;
 
@@ -13,19 +12,18 @@ public sealed class MovFormatDetector : IImageFormatDetector
 {
     public int HeaderSize => 10;
 
-    public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
+    public bool TryDetectFormat(ReadOnlySpan<byte> header, [NotNullWhen(true)] out IImageFormat? format)
     {
-        return IsSupportedFileFormat(header) ? MovFormat.Instance : null;
+        format = IsSupportedFileFormat(header) ? MovFormat.Instance : null;
+
+        return format != null;
     }
 
     private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
     {
-        if (header.Length >= HeaderSize &&
-            FormatDetectorUtils.IsMp4OrMovHeader(header.Slice(4)))
+        if (header.Length >= HeaderSize)
         {
-            return
-                header[8] == 0x71 &&    // q
-                header[9] == 0x74;      // t
+            return header[4..10].SequenceEqual(MovConstants.FtypQtMarker);
         }
 
         return false;

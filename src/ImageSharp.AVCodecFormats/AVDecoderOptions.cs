@@ -1,8 +1,17 @@
-﻿namespace HeyRed.ImageSharp.AVCodecFormats;
+﻿using SixLabors.ImageSharp.Formats;
 
-public class AVDecoderOptions : IAVDecoderOptions
+namespace HeyRed.ImageSharp.AVCodecFormats;
+
+/// <summary>
+/// AV decoder options for generating an image out of a video/audio stream.
+/// </summary>
+public sealed class AVDecoderOptions : ISpecializedDecoderOptions
 {
-    public BlackFrameFilterOptions? BlackFilterOptions { get; set; }
+    /// <inheritdoc/>
+    public DecoderOptions GeneralOptions { get; init; } = new();
 
-    public FrameSizeOptions? FrameSizeOptions { get; set; }
+    /// <summary>
+    /// Preserve aspect ratio when <see cref="DecoderOptions.TargetSize"/> is set.
+    /// </summary>
+    public bool PreserveAspectRatio { get; set; }
 }

@@ -1,23 +1,16 @@
 ﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.MpegTs;
 
-public sealed class MpegTsConfigurationModule : IConfigurationModule
+public sealed class MpegTsConfigurationModule : IImageFormatConfigurationModule
 {
-    private readonly IAVDecoderOptions? _decoderOptions;
-
-    public MpegTsConfigurationModule()
-    {
-    }
-
-    public MpegTsConfigurationModule(IAVDecoderOptions decoderOptions) => _decoderOptions = decoderOptions;
-
+    /// <summary>
+    /// Registers the image encoders, decoders and mime type detectors for the mp4 format.
+    /// </summary>
     public void Configure(Configuration configuration)
     {
-        configuration.ImageFormatsManager.SetDecoder(MpegTsFormat.Instance, _decoderOptions == null ?
-            new MpegTsDecoder() :
-            new MpegTsDecoder(_decoderOptions));
-
+        configuration.ImageFormatsManager.SetDecoder(MpegTsFormat.Instance, AVDecoder.Instance);
         configuration.ImageFormatsManager.AddImageFormatDetector(new MpegTsFormatDetector());
     }
 }

@@ -16,9 +16,9 @@ public sealed class WmvFormat : IImageFormat<WmvMetadata>
 
     public string DefaultMimeType => "video/x-ms-wmv";
 
-    public IEnumerable<string> MimeTypes => new[] { "video/x-ms-wmv", };
+    public IEnumerable<string> MimeTypes => WmvConstants.MimeTypes;
 
-    public IEnumerable<string> FileExtensions => new[] { "wmv" };
+    public IEnumerable<string> FileExtensions => WmvConstants.FileExtensions;
 
     public WmvMetadata CreateDefaultFormatMetadata() => new();
 }

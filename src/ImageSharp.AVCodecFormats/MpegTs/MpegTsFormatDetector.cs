@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using SixLabors.ImageSharp.Formats;
 
@@ -6,13 +7,13 @@ namespace HeyRed.ImageSharp.AVCodecFormats.MpegTs;
 
 public sealed class MpegTsFormatDetector : IImageFormatDetector
 {
-    private const int G_MARK = 0x47;
-
     public int HeaderSize => 189;
 
-    public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
+    public bool TryDetectFormat(ReadOnlySpan<byte> header, [NotNullWhen(true)] out IImageFormat? format)
     {
-        return IsSupportedFileFormat(header) ? MpegTsFormat.Instance : null;
+        format = IsSupportedFileFormat(header) ? MpegTsFormat.Instance : null;
+
+        return format != null;
     }
 
     private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
@@ -21,8 +22,8 @@ public sealed class MpegTsFormatDetector : IImageFormatDetector
         {
             // Every 188
             return
-                header[0] == G_MARK &&  // G
-                header[188] == G_MARK;  // G
+                header[0] == MpegTsConstants.G_MARK &&
+                header[188] == MpegTsConstants.G_MARK;
         }
 
         return false;

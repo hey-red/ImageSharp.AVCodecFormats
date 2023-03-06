@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using SixLabors.ImageSharp.Formats;
 
@@ -8,9 +9,11 @@ public sealed class AviFormatDetector : IImageFormatDetector
 {
     public int HeaderSize => 16;
 
-    public IImageFormat? DetectFormat(ReadOnlySpan<byte> header)
+    public bool TryDetectFormat(ReadOnlySpan<byte> header, [NotNullWhen(true)] out IImageFormat? format)
     {
-        return IsSupportedFileFormat(header) ? AviFormat.Instance : null;
+        format = IsSupportedFileFormat(header) ? AviFormat.Instance : null;
+
+        return format != null;
     }
 
     private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
@@ -18,19 +21,8 @@ public sealed class AviFormatDetector : IImageFormatDetector
         if (header.Length >= HeaderSize)
         {
             return
-                header[0] == 0x52 &&    // R
-                header[1] == 0x49 &&    // I
-                header[2] == 0x46 &&    // F
-                header[3] == 0x46 &&    // F
-
-                header[8] == 0x41 &&    // A
-                header[9] == 0x56 &&    // V
-                header[10] == 0x49 &&   // I
-                header[11] == 0x20 &&
-                header[12] == 0x4C &&   // L
-                header[13] == 0x49 &&   // I
-                header[14] == 0x53 &&   // S
-                header[15] == 0x54;     // T
+                header[..4].SequenceEqual(AviConstants.RiffContainerHeader) &&
+                header[8..16].SequenceEqual(AviConstants.AviListHeader);
         }
 
         return false;
