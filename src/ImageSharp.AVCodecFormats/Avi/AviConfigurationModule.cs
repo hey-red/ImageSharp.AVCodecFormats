@@ -10,7 +10,7 @@ public sealed class AviConfigurationModule : IImageFormatConfigurationModule
     /// </summary>
     public void Configure(Configuration configuration)
     {
-        configuration.ImageFormatsManager.SetDecoder(AviFormat.Instance, AVDecoder.Instance);
+        configuration.ImageFormatsManager.SetDecoder(AviFormat.Instance, AviDecoder.Instance);
         configuration.ImageFormatsManager.AddImageFormatDetector(new AviFormatDetector());
     }
 }

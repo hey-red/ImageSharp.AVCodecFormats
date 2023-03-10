@@ -10,7 +10,7 @@ public sealed class MkvConfigurationModule : IImageFormatConfigurationModule
     /// </summary>
     public void Configure(Configuration configuration)
     {
-        configuration.ImageFormatsManager.SetDecoder(MkvFormat.Instance, AVDecoder.Instance);
+        configuration.ImageFormatsManager.SetDecoder(MkvFormat.Instance, MkvDecoder.Instance);
         configuration.ImageFormatsManager.AddImageFormatDetector(new MkvFormatDetector());
     }
 }

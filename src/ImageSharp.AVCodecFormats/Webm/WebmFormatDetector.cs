@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-using HeyRed.ImageSharp.AVCodecFormats.Mkv;
-
 using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Webm;
@@ -13,7 +11,7 @@ public sealed class WebmFormatDetector : IImageFormatDetector
 
     public bool TryDetectFormat(ReadOnlySpan<byte> header, [NotNullWhen(true)] out IImageFormat? format)
     {
-        format = IsSupportedFileFormat(header) ? MkvFormat.Instance : null;
+        format = IsSupportedFileFormat(header) ? WebmFormat.Instance : null;
 
         return format != null;
     }

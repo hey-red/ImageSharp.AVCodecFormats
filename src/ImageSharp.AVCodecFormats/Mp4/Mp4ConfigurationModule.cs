@@ -10,7 +10,7 @@ public sealed class Mp4ConfigurationModule : IImageFormatConfigurationModule
     /// </summary>
     public void Configure(Configuration configuration)
     {
-        configuration.ImageFormatsManager.SetDecoder(Mp4Format.Instance, AVDecoder.Instance);
+        configuration.ImageFormatsManager.SetDecoder(Mp4Format.Instance, Mp4Decoder.Instance);
         configuration.ImageFormatsManager.AddImageFormatDetector(new Mp4FormatDetector());
     }
 }

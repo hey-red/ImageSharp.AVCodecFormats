@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 
 using HeyRed.ImageSharp.AVCodecFormats;
 
@@ -40,6 +41,10 @@ public class BasicTests
         };
     }
 
+    private IImageFormat GetFormat(string format)
+        => _decoderOptions.Configuration.ImageFormats
+        .FirstOrDefault(x => x.FileExtensions.Contains(format));
+
     [Theory]
     [InlineData("avc.mp4", 640, 360)]
     [InlineData("av1.mp4", 640, 360)]
@@ -55,18 +60,20 @@ public class BasicTests
     public void IdentifyTests(string fileName, int width, int height)
     {
         string filePath = Path.Combine(_testVideoDataPath, fileName);
+        string extension = Path.GetExtension(filePath).Replace(".", "");
+
+        IImageFormat format = GetFormat(extension);
 
         _output.WriteLine($"Processing file: \"{Path.GetFileName(filePath)}\"");
 
         using var inputStream = File.OpenRead(filePath);
         ImageInfo imageInfo = Image.Identify(_decoderOptions, inputStream);
 
-        Assert.NotNull(imageInfo);
-
         _output.WriteLine($"Dimensions: {imageInfo.Width}x{imageInfo.Height}");
 
         Assert.Equal(width, imageInfo.Width);
         Assert.Equal(height, imageInfo.Height);
+        Assert.Equal(format, imageInfo.Metadata.DecodedImageFormat);
     }
 
     [Theory]

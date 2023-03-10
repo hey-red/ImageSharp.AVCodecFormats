@@ -130,7 +130,6 @@ internal unsafe sealed class AVDecoderCore
             StreamsToLoad = MediaMode.Video,
         });
 
-
         Image<TPixel>? resultImage = null;
 
         uint frameCount = 0;

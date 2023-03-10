@@ -10,7 +10,7 @@ public sealed class WmvConfigurationModule : IImageFormatConfigurationModule
     /// </summary>
     public void Configure(Configuration configuration)
     {
-        configuration.ImageFormatsManager.SetDecoder(WmvFormat.Instance, AVDecoder.Instance);
+        configuration.ImageFormatsManager.SetDecoder(WmvFormat.Instance, WmvDecoder.Instance);
         configuration.ImageFormatsManager.AddImageFormatDetector(new WmvFormatDetector());
     }
 }

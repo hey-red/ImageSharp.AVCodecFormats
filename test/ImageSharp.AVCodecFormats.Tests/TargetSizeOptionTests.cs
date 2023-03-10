@@ -1,6 +1,7 @@
 ﻿using System.IO;
 
 using HeyRed.ImageSharp.AVCodecFormats;
+using HeyRed.ImageSharp.AVCodecFormats.Avi;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
@@ -36,7 +37,7 @@ public class TargetSizeOptionTests
         string filePath = Path.Combine(_testVideoDataPath, "avc.mp4");
 
         using var inputStream = File.OpenRead(filePath);
-        using var image = AVDecoder.Instance.Decode(decoderOptions, inputStream);
+        using var image = AviDecoder.Instance.Decode(decoderOptions, inputStream);
 
         if (!aspectRatio)
         {

@@ -10,7 +10,7 @@ public sealed class WebmConfigurationModule : IImageFormatConfigurationModule
     /// </summary>
     public void Configure(Configuration configuration)
     {
-        configuration.ImageFormatsManager.SetDecoder(WebmFormat.Instance, AVDecoder.Instance);
+        configuration.ImageFormatsManager.SetDecoder(WebmFormat.Instance, WebmDecoder.Instance);
         configuration.ImageFormatsManager.AddImageFormatDetector(new WebmFormatDetector());
     }
 }

@@ -6,18 +6,18 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace HeyRed.ImageSharp.AVCodecFormats;
+namespace HeyRed.ImageSharp.AVCodecFormats.MpegTs;
 
-public sealed class AVDecoder : SpecializedImageDecoder<AVDecoderOptions>
+public sealed class MpegTsDecoder : SpecializedImageDecoder<AVDecoderOptions>
 {
-    private AVDecoder()
+    private MpegTsDecoder()
     {
     }
 
     /// <summary>
     /// Gets the shared instance.
     /// </summary>
-    public static AVDecoder Instance { get; } = new();
+    public static MpegTsDecoder Instance { get; } = new();
 
     /// <inheritdoc/>
     protected override ImageInfo Identify(DecoderOptions options, Stream stream, CancellationToken cancellationToken)
