@@ -81,7 +81,6 @@ public class FrameFilterTests
         using var inputStream = File.OpenRead(filePath);
         using var image = Mp4Decoder.Instance.Decode(decoderOptions, inputStream);
 
-        // Two first frames are completely black
         Assert.Equal(expectedFramesCount, image.Frames.Count); 
     }
 }
