@@ -23,7 +23,9 @@ internal unsafe sealed class AVDecoderCore
     private static bool initBinaries = false;
 
     /// <inheritdoc />
-    private readonly DecoderOptions options;
+    private readonly DecoderOptions generalOptions;
+
+    private readonly AVDecoderOptions options;
 
     private readonly bool preserveAspectRatio;
 
@@ -42,7 +44,8 @@ internal unsafe sealed class AVDecoderCore
             }
         }
 
-        options = decoderOptions.GeneralOptions;
+        options = decoderOptions;
+        generalOptions = decoderOptions.GeneralOptions;
         preserveAspectRatio = decoderOptions.PreserveAspectRatio;
     }
 
@@ -75,48 +78,10 @@ internal unsafe sealed class AVDecoderCore
             new ImageMetadata());
     }
 
-    private static ImagePixelFormat MapPixelFormat<TPixel>(TPixel sourcePixelFormat) => sourcePixelFormat switch
-    {
-        Rgb24 _ => ImagePixelFormat.Rgb24,
-        Bgr24 _ => ImagePixelFormat.Bgr24,
-        Rgba32 _ => ImagePixelFormat.Rgba32,
-        Argb32 _ => ImagePixelFormat.Argb32,
-        Bgra32 _ => ImagePixelFormat.Bgra32,
-        _ => throw new ArgumentException("Unsupported pixel format."),
-    };
-
     public Image<TPixel> Decode<TPixel>(Stream stream, CancellationToken cancellationToken)
        where TPixel : unmanaged, IPixel<TPixel>
     {
-        DrawingSize? targetFrameSize = null;
-        if (options.TargetSize != null)
-        {
-            // Calculate target size with aspect ratio
-            if (preserveAspectRatio)
-            {
-                ImageInfo sourceInfo = Identify(stream, CancellationToken.None);
-
-                var sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
-                    sourceInfo.Size,
-                    options.TargetSize.Value.Width,
-                    options.TargetSize.Value.Height);
-
-                targetFrameSize = new DrawingSize(
-                    sizeWithAspectRatio.Width,
-                    sizeWithAspectRatio.Height);
-
-                if (stream.CanSeek)
-                {
-                    stream.Position = 0;
-                }
-            }
-            else
-            {
-                targetFrameSize = new DrawingSize(
-                    options.TargetSize.Value.Width, 
-                    options.TargetSize.Value.Width);
-            }
-        }
+        DrawingSize? targetFrameSize = CalculateTargetFrameSize(stream);
 
         using var file = MediaFile.Open(stream, new MediaOptions
         {
@@ -135,27 +100,44 @@ internal unsafe sealed class AVDecoderCore
         uint frameCount = 0;
         try
         {
-            while (file.Video.TryGetNextFrame(out var frame))
+            while (file.Video.TryGetNextFrame(out ImageData frame))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                // Image
                 if (resultImage == default)
                 {
-                    resultImage = Image.LoadPixelData<TPixel>(frame.Data, frame.ImageSize.Width, frame.ImageSize.Height);
+                    resultImage = Image.LoadPixelData<TPixel>(
+                        frame.Data,
+                        frame.ImageSize.Width,
+                        frame.ImageSize.Height);
+
+                    if (options.FrameFilter?.Invoke(resultImage.Frames.RootFrame, frameCount) is true)
+                    {
+                        if (frameCount + 1 != generalOptions.MaxFrames)
+                        {
+                            resultImage.Dispose();
+                            resultImage = null;
+                        }
+                    }
                 }
-                // Frame
                 else
                 {
                     ImageFrame<TPixel> imageFrame = Image.LoadPixelData<TPixel>(
-                        frame.Data, 
-                        frame.ImageSize.Width, 
+                        frame.Data,
+                        frame.ImageSize.Width,
                         frame.ImageSize.Height).Frames.RootFrame;
 
-                    resultImage.Frames.AddFrame(imageFrame);
+                    if (options.FrameFilter?.Invoke(imageFrame, frameCount) is true)
+                    {
+                        imageFrame.Dispose();
+                    }
+                    else
+                    {
+                        resultImage.Frames.AddFrame(imageFrame);
+                    }
                 }
 
-                if (++frameCount == options.MaxFrames)
+                if (++frameCount == generalOptions.MaxFrames)
                 {
                     break;
                 }
@@ -174,5 +156,50 @@ internal unsafe sealed class AVDecoderCore
         }
 
         return resultImage;
+    }
+
+    private static ImagePixelFormat MapPixelFormat<TPixel>(TPixel sourcePixelFormat) => sourcePixelFormat switch
+    {
+        Rgb24 _ => ImagePixelFormat.Rgb24,
+        Bgr24 _ => ImagePixelFormat.Bgr24,
+        Rgba32 _ => ImagePixelFormat.Rgba32,
+        Argb32 _ => ImagePixelFormat.Argb32,
+        Bgra32 _ => ImagePixelFormat.Bgra32,
+        _ => throw new ArgumentException("Unsupported pixel format."),
+    };
+
+    private DrawingSize? CalculateTargetFrameSize(Stream stream)
+    {
+        DrawingSize? targetFrameSize = null;
+        if (generalOptions.TargetSize != null)
+        {
+            // Calculate target size with aspect ratio
+            if (preserveAspectRatio)
+            {
+                ImageInfo sourceInfo = Identify(stream, CancellationToken.None);
+
+                var sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
+                    sourceInfo.Size,
+                    generalOptions.TargetSize.Value.Width,
+                    generalOptions.TargetSize.Value.Height);
+
+                targetFrameSize = new DrawingSize(
+                    sizeWithAspectRatio.Width,
+                    sizeWithAspectRatio.Height);
+
+                if (stream.CanSeek)
+                {
+                    stream.Position = 0;
+                }
+            }
+            else
+            {
+                targetFrameSize = new DrawingSize(
+                    generalOptions.TargetSize.Value.Width,
+                    generalOptions.TargetSize.Value.Width);
+            }
+        }
+
+        return targetFrameSize;
     }
 }

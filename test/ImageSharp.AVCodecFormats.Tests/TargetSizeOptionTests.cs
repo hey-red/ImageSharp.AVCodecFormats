@@ -34,7 +34,7 @@ public class TargetSizeOptionTests
             PreserveAspectRatio = aspectRatio
         };
 
-        string filePath = Path.Combine(_testVideoDataPath, "avc.mp4");
+        string filePath = Path.Combine(_testVideoDataPath, "mpeg4.avi");
 
         using var inputStream = File.OpenRead(filePath);
         using var image = AviDecoder.Instance.Decode(decoderOptions, inputStream);

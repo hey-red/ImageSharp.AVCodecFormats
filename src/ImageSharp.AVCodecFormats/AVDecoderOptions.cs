@@ -1,4 +1,7 @@
-﻿using SixLabors.ImageSharp.Formats;
+﻿using System;
+
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats;
 
@@ -14,4 +17,6 @@ public sealed class AVDecoderOptions : ISpecializedDecoderOptions
     /// Preserve aspect ratio when <see cref="DecoderOptions.TargetSize"/> is set.
     /// </summary>
     public bool PreserveAspectRatio { get; set; }
+
+    public Func<ImageFrame, uint, bool>? FrameFilter { get; set; }
 }
