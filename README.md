@@ -35,7 +35,7 @@ using SixLabors.ImageSharp.Processing;
 using HeyRed.ImageSharp.AVCodecFormats;
 
 // Create custom configuration with all available decoders
-var configuration = new Configuration().WithAVDecoders(); // With options WithAVDecoders(options)
+var configuration = new Configuration().WithAVDecoders();
 
 // Or only required decoders
 var configuration = new Configuration(
@@ -48,38 +48,78 @@ var configuration = new Configuration(
     new MpegTsConfigurationModule(),
     new Mp3ConfigurationModule());
 
-using var inputStream = File.OpenRead("/path/to/video.mp4");
-using var outputStream = File.OpenWrite("/path/to/resized_image.jpeg");
+// NOTE: Don't forget to set max frames.
+// Without this limit you can run into huge memory usage.
+var decoderOptions = new DecoderOptions
+{
+    MaxFrames = 50,
+    Configuration = configuration,
+    // The TargetSize option is also supported. 
+    // This will reduce memory usage in result image.   
+};
 
-// Pass it into image load method(for example)
-using var image = Image.Load(configuration, inputStream);
+using var inputStream = File.OpenRead("/path/to/video.mp4");
+using var image = Image.Load(decoderOptions, inputStream);
 
 // Resize
 image.Mutate(x => x.Resize(image.Width / 2, image.Height / 2)); 
 
-// Save using jpeg encoder
-image.Save(outputStream, new JpegEncoder());
+// Save all frames using png encoder
+for (int i = 0; i < image.Frames.Count; i++)
+{
+    image.Frames
+        .CloneFrame(i)
+        .SaveAsPng($"frame{i}.png");
+}
 ```
 More info <https://docs.sixlabors.com/articles/imagesharp/configuration.html>
 
-## Blackframe filter
-You can skip first (n) of frames that are black or almost black.
+## Frame filter
+Frame filter is a delegate that provides the way to skip frames based on their content.
+
+It can be useful for various scenarios like black/white frames filter, skip every n frame or something else.
+
 ```C#
-var options = new AVDecoderOptions
+var decoderOptions = new AVDecoderOptions
 {
-    // With default values(see docs)
-    BlackFilterOptions = new BlackFrameFilterOptions()
+    GeneralOptions = new DecoderOptions
+    {
+        MaxFrames = 100,
+    },
+    FrameFilter = (imageFrame, frameNum) =>
+    {
+        var frame = (ImageFrame<Rgba32>)frame; // Pix format should match with Load/Decode methods
+
+        // Do something with frame
+
+        // Return true when frame should be not present in result image
+        return false;
+    },
 };
 
-var configuration = new Configuration().WithAVDecoders(options);
+using var inputStream = File.OpenRead(/path/to/video.mp4);
+using var image = Mp4Decoder.Instance.Decode(decoderOptions, inputStream);
 
-using var inputStream = File.OpenRead(filePath);
-using var image = Image.Load(configuration, inputStream);
+// do something
 ```
-The docs for filter options can be found [here](https://github.com/hey-red/ImageSharp.AVCodecFormats/blob/master/src/ImageSharp.AVCodecFormats/BlackFrameFilterOptions.cs).
+See [tests](https://github.com/hey-red/ImageSharp.AVCodecFormats/blob/master/test/ImageSharp.AVCodecFormats.Tests/FrameFilterTests.cs) for basic implementation of black frames filter.
+
+## Additional tips
+If you want preserve aspect ratio when TargetSize is set:
+
+```C#
+var decoderOptions = new AVDecoderOptions
+{
+    PreserveAspectRatio = true,
+    GeneralOptions = new DecoderOptions
+    {
+        TargetSize = new Size(500),
+    },
+};
+```
 
 ## Supported formats
-mp4, webm, avi, mkv, mov, ts, wmv, mp3(extract cover image).
+mp4, webm, avi, mkv, mov, ts, wmv, mp3(cover image).
 
 ## Supported codecs
 [Native package](https://www.nuget.org/packages/ImageSharp.AVCodecFormats.Native) provides codecs listed below:
