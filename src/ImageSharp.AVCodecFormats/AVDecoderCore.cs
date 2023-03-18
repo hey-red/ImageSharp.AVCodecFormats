@@ -23,13 +23,11 @@ internal unsafe sealed class AVDecoderCore
     private static bool initBinaries = false;
 
     /// <inheritdoc />
-    private readonly DecoderOptions generalOptions;
+    private readonly DecoderOptions decoderOptions;
 
     private readonly AVDecoderOptions options;
 
-    private readonly bool preserveAspectRatio;
-
-    public AVDecoderCore(AVDecoderOptions decoderOptions)
+    public AVDecoderCore(AVDecoderOptions avDecoderOptions)
     {
         if (!initBinaries)
         {
@@ -44,9 +42,8 @@ internal unsafe sealed class AVDecoderCore
             }
         }
 
-        options = decoderOptions;
-        generalOptions = decoderOptions.GeneralOptions;
-        preserveAspectRatio = decoderOptions.PreserveAspectRatio;
+        options = avDecoderOptions;
+        decoderOptions = avDecoderOptions.GeneralOptions;
     }
 
     public ImageInfo Identify(Stream stream, CancellationToken cancellationToken)
@@ -113,7 +110,7 @@ internal unsafe sealed class AVDecoderCore
 
                     if (options.FrameFilter?.Invoke(resultImage.Frames.RootFrame, frameCount) is true)
                     {
-                        if (frameCount + 1 != generalOptions.MaxFrames)
+                        if (frameCount + 1 != decoderOptions.MaxFrames)
                         {
                             resultImage.Dispose();
                             resultImage = null;
@@ -122,22 +119,19 @@ internal unsafe sealed class AVDecoderCore
                 }
                 else
                 {
-                    ImageFrame<TPixel> imageFrame = Image.LoadPixelData<TPixel>(
+                    using var image = Image.LoadPixelData<TPixel>(
                         frame.Data,
                         frame.ImageSize.Width,
-                        frame.ImageSize.Height).Frames.RootFrame;
+                        frame.ImageSize.Height);
 
-                    if (options.FrameFilter?.Invoke(imageFrame, frameCount) is true)
+                    if (options.FrameFilter is null ||
+                        options.FrameFilter?.Invoke(image.Frames.RootFrame, frameCount) is false)
                     {
-                        imageFrame.Dispose();
-                    }
-                    else
-                    {
-                        resultImage.Frames.AddFrame(imageFrame);
+                        resultImage.Frames.AddFrame(image.Frames.RootFrame);
                     }
                 }
 
-                if (++frameCount == generalOptions.MaxFrames)
+                if (++frameCount == decoderOptions.MaxFrames)
                 {
                     break;
                 }
@@ -171,17 +165,17 @@ internal unsafe sealed class AVDecoderCore
     private DrawingSize? CalculateTargetFrameSize(Stream stream)
     {
         DrawingSize? targetFrameSize = null;
-        if (generalOptions.TargetSize != null)
+        if (decoderOptions.TargetSize != null)
         {
             // Calculate target size with aspect ratio
-            if (preserveAspectRatio)
+            if (options.PreserveAspectRatio)
             {
                 ImageInfo sourceInfo = Identify(stream, CancellationToken.None);
 
                 var sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
                     sourceInfo.Size,
-                    generalOptions.TargetSize.Value.Width,
-                    generalOptions.TargetSize.Value.Height);
+                    decoderOptions.TargetSize.Value.Width,
+                    decoderOptions.TargetSize.Value.Height);
 
                 targetFrameSize = new DrawingSize(
                     sizeWithAspectRatio.Width,
@@ -195,8 +189,8 @@ internal unsafe sealed class AVDecoderCore
             else
             {
                 targetFrameSize = new DrawingSize(
-                    generalOptions.TargetSize.Value.Width,
-                    generalOptions.TargetSize.Value.Width);
+                    decoderOptions.TargetSize.Value.Width,
+                    decoderOptions.TargetSize.Value.Width);
             }
         }
 

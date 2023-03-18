@@ -18,5 +18,10 @@ public sealed class AVDecoderOptions : ISpecializedDecoderOptions
     /// </summary>
     public bool PreserveAspectRatio { get; set; }
 
+    /// <summary>
+    /// A delegate that provides the way to skip frames based on their content.
+    /// The first argument is <see cref="ImageFrame"/>, the second is the current frame number.
+    /// Returns true, when frame should be skipped, otherwise false.
+    /// </summary>
     public Func<ImageFrame, uint, bool>? FrameFilter { get; set; }
 }
