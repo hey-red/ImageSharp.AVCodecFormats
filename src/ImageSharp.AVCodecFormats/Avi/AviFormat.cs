@@ -4,7 +4,7 @@ using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Avi;
 
-public sealed class AviFormat : IImageFormat<AviMetadata>
+public sealed class AviFormat : IImageFormat<AVMetadata>
 {
     private AviFormat()
     {
@@ -23,5 +23,5 @@ public sealed class AviFormat : IImageFormat<AviMetadata>
 
     public IEnumerable<string> FileExtensions => AviConstants.FileExtensions;
 
-    public AviMetadata CreateDefaultFormatMetadata() => new();
+    public AVMetadata CreateDefaultFormatMetadata() => new();
 }

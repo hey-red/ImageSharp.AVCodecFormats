@@ -4,7 +4,7 @@ using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Mkv;
 
-public sealed class MkvFormat : IImageFormat<MkvMetadata>
+public sealed class MkvFormat : IImageFormat<AVMetadata>
 {
     private MkvFormat()
     {
@@ -20,5 +20,5 @@ public sealed class MkvFormat : IImageFormat<MkvMetadata>
 
     public IEnumerable<string> FileExtensions => MkvConstants.FileExtensions;
 
-    public MkvMetadata CreateDefaultFormatMetadata() => new();
+    public AVMetadata CreateDefaultFormatMetadata() => new();
 }

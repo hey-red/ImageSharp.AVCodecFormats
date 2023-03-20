@@ -4,7 +4,7 @@ using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.MpegTs;
 
-public sealed class MpegTsFormat : IImageFormat<MpegTsMetadata>
+public sealed class MpegTsFormat : IImageFormat<AVMetadata>
 {
     private MpegTsFormat()
     {
@@ -20,5 +20,5 @@ public sealed class MpegTsFormat : IImageFormat<MpegTsMetadata>
 
     public IEnumerable<string> FileExtensions => MpegTsConstants.FileExtensions;
 
-    public MpegTsMetadata CreateDefaultFormatMetadata() => new();
+    public AVMetadata CreateDefaultFormatMetadata() => new();
 }

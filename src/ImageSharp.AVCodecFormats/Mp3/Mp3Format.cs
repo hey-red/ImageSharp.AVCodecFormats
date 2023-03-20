@@ -4,7 +4,7 @@ using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Mp3;
 
-public sealed class Mp3Format : IImageFormat<Mp3Metadata>
+public sealed class Mp3Format : IImageFormat<AVMetadata>
 {
     private Mp3Format()
     {
@@ -20,5 +20,5 @@ public sealed class Mp3Format : IImageFormat<Mp3Metadata>
 
     public IEnumerable<string> FileExtensions => Mp3Constants.FileExtensions;
 
-    public Mp3Metadata CreateDefaultFormatMetadata() => new();
+    public AVMetadata CreateDefaultFormatMetadata() => new();
 }

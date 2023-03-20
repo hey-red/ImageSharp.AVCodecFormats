@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 
@@ -46,13 +47,13 @@ internal unsafe sealed class AVDecoderCore
         decoderOptions = avDecoderOptions.GeneralOptions;
     }
 
-    public ImageInfo Identify(Stream stream, CancellationToken cancellationToken)
+    public ImageInfo Identify(Stream stream, IImageFormat<AVMetadata> imageFormat, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         using var file = MediaFile.Open(stream, new MediaOptions
         {
-            StreamsToLoad = MediaMode.Video
+            StreamsToLoad = MediaMode.AudioVideo
         });
 
         if (!file.HasVideo)
@@ -69,16 +70,18 @@ internal unsafe sealed class AVDecoderCore
             bitsPerPixel = ffmpeg.av_get_bits_per_pixel(desc);
         }
 
+        ImageMetadata metadata = GetMetadata(file, imageFormat);
+
         return new ImageInfo(
             new PixelTypeInfo(bitsPerPixel),
             new Size(file.Video.Info.FrameSize.Width, file.Video.Info.FrameSize.Height),
-            new ImageMetadata());
+            metadata);
     }
 
-    public Image<TPixel> Decode<TPixel>(Stream stream, CancellationToken cancellationToken)
+    public Image<TPixel> Decode<TPixel>(Stream stream, IImageFormat<AVMetadata> imageFormat, CancellationToken cancellationToken)
        where TPixel : unmanaged, IPixel<TPixel>
     {
-        DrawingSize? targetFrameSize = CalculateTargetFrameSize(stream);
+        DrawingSize? targetFrameSize = CalculateTargetFrameSize(stream, imageFormat);
 
         using var file = MediaFile.Open(stream, new MediaOptions
         {
@@ -162,7 +165,53 @@ internal unsafe sealed class AVDecoderCore
         _ => throw new ArgumentException("Unsupported pixel format."),
     };
 
-    private DrawingSize? CalculateTargetFrameSize(Stream stream)
+    private static ImageMetadata GetMetadata(MediaFile file, IImageFormat<AVMetadata> imageFormat)
+    {
+        var metadata = new ImageMetadata();
+
+        AVMetadata avMetadata = metadata.GetFormatMetadata(imageFormat);
+
+        avMetadata.ContainerFormat = file.Info.ContainerFormat;
+        avMetadata.Bitrate = file.Info.Bitrate;
+        avMetadata.Duration = file.Info.Duration;
+        avMetadata.ContainerMetadata = file.Info.Metadata.Metadata;
+
+        var videoStreams = new List<VideoStreamInfo>();
+        var audioStreams = new List<AudioStreamInfo>();
+
+        foreach (var videoStream in file.VideoStreams)
+        {
+            var videStreamInfo = new VideoStreamInfo()
+            {
+                CodecName = videoStream.Info.CodecName,
+                Duration = videoStream.Info.Duration,
+                AvgFrameRate = videoStream.Info.AvgFrameRate,
+                FramesCount = videoStream.Info.NumberOfFrames,
+            };
+
+            videoStreams.Add(videStreamInfo);
+        }
+
+        foreach (var audioStream in file.AudioStreams)
+        {
+            var audioStreamInfo = new AudioStreamInfo()
+            {
+                CodecName = audioStream.Info.CodecName,
+                Duration = audioStream.Info.Duration,
+                NumChannels = audioStream.Info.NumChannels,
+                SampleRate = audioStream.Info.SampleRate,
+            };
+
+            audioStreams.Add(audioStreamInfo);
+        }
+
+        avMetadata.VideoStreams = videoStreams;
+        avMetadata.AudioStreams = audioStreams;
+
+        return metadata;
+    }
+
+    private DrawingSize? CalculateTargetFrameSize(Stream stream, IImageFormat<AVMetadata> imageFormat)
     {
         DrawingSize? targetFrameSize = null;
         if (decoderOptions.TargetSize != null)
@@ -170,7 +219,7 @@ internal unsafe sealed class AVDecoderCore
             // Calculate target size with aspect ratio
             if (options.PreserveAspectRatio)
             {
-                ImageInfo sourceInfo = Identify(stream, CancellationToken.None);
+                ImageInfo sourceInfo = Identify(stream, imageFormat, CancellationToken.None);
 
                 var sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
                     sourceInfo.Size,

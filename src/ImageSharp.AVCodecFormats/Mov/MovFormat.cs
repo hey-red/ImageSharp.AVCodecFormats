@@ -4,7 +4,7 @@ using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Mov;
 
-public sealed class MovFormat : IImageFormat<MovMetadata>
+public sealed class MovFormat : IImageFormat<AVMetadata>
 {
     private MovFormat()
     {
@@ -20,5 +20,5 @@ public sealed class MovFormat : IImageFormat<MovMetadata>
 
     public IEnumerable<string> FileExtensions => MovConstants.FileExtensions;
 
-    public MovMetadata CreateDefaultFormatMetadata() => new();
+    public AVMetadata CreateDefaultFormatMetadata() => new();
 }

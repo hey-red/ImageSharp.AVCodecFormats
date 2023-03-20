@@ -25,7 +25,9 @@ public sealed class MovDecoder : SpecializedImageDecoder<AVDecoderOptions>
         ArgumentNullException.ThrowIfNull(options, nameof(options));
         ArgumentNullException.ThrowIfNull(stream, nameof(stream));
 
-        return new AVDecoderCore(new() { GeneralOptions = options }).Identify(stream, cancellationToken);
+        return 
+            new AVDecoderCore(new() { GeneralOptions = options })
+            .Identify(stream, MovFormat.Instance, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -34,7 +36,9 @@ public sealed class MovDecoder : SpecializedImageDecoder<AVDecoderOptions>
         ArgumentNullException.ThrowIfNull(options, nameof(options));
         ArgumentNullException.ThrowIfNull(stream, nameof(stream));
 
-        Image<TPixel> image = new AVDecoderCore(options).Decode<TPixel>(stream, cancellationToken);
+        Image<TPixel> image = 
+            new AVDecoderCore(options)
+            .Decode<TPixel>(stream, MovFormat.Instance, cancellationToken);
 
         ScaleToTargetSize(options.GeneralOptions, image);
 

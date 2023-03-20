@@ -25,7 +25,9 @@ public sealed class WebmDecoder : SpecializedImageDecoder<AVDecoderOptions>
         ArgumentNullException.ThrowIfNull(options, nameof(options));
         ArgumentNullException.ThrowIfNull(stream, nameof(stream));
 
-        return new AVDecoderCore(new() { GeneralOptions = options }).Identify(stream, cancellationToken);
+        return 
+            new AVDecoderCore(new() { GeneralOptions = options })
+            .Identify(stream, WebmFormat.Instance, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -34,7 +36,9 @@ public sealed class WebmDecoder : SpecializedImageDecoder<AVDecoderOptions>
         ArgumentNullException.ThrowIfNull(options, nameof(options));
         ArgumentNullException.ThrowIfNull(stream, nameof(stream));
 
-        Image<TPixel> image = new AVDecoderCore(options).Decode<TPixel>(stream, cancellationToken);
+        Image<TPixel> image = 
+            new AVDecoderCore(options)
+            .Decode<TPixel>(stream, WebmFormat.Instance, cancellationToken);
 
         ScaleToTargetSize(options.GeneralOptions, image);
 

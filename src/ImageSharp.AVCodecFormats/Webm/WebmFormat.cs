@@ -4,7 +4,7 @@ using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Webm;
 
-public sealed class WebmFormat : IImageFormat<WebmMetadata>
+public sealed class WebmFormat : IImageFormat<AVMetadata>
 {
     private WebmFormat()
     {
@@ -20,5 +20,5 @@ public sealed class WebmFormat : IImageFormat<WebmMetadata>
 
     public IEnumerable<string> FileExtensions => WebmConstants.FileExtensions;
 
-    public WebmMetadata CreateDefaultFormatMetadata() => new();
+    public AVMetadata CreateDefaultFormatMetadata() => new();
 }

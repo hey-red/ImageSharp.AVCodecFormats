@@ -4,7 +4,7 @@ using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Wmv;
 
-public sealed class WmvFormat : IImageFormat<WmvMetadata>
+public sealed class WmvFormat : IImageFormat<AVMetadata>
 {
     private WmvFormat()
     {
@@ -20,5 +20,5 @@ public sealed class WmvFormat : IImageFormat<WmvMetadata>
 
     public IEnumerable<string> FileExtensions => WmvConstants.FileExtensions;
 
-    public WmvMetadata CreateDefaultFormatMetadata() => new();
+    public AVMetadata CreateDefaultFormatMetadata() => new();
 }

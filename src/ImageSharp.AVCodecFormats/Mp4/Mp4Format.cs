@@ -4,7 +4,7 @@ using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.Mp4;
 
-public sealed class Mp4Format : IImageFormat<Mp4Metadata>
+public sealed class Mp4Format : IImageFormat<AVMetadata>
 {
     private Mp4Format()
     {
@@ -20,5 +20,5 @@ public sealed class Mp4Format : IImageFormat<Mp4Metadata>
 
     public IEnumerable<string> FileExtensions => Mp4Constants.FileExtensions;
 
-    public Mp4Metadata CreateDefaultFormatMetadata() => new();
+    public AVMetadata CreateDefaultFormatMetadata() => new();
 }
