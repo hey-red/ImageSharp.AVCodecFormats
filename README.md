@@ -118,6 +118,14 @@ var decoderOptions = new AVDecoderOptions
 };
 ```
 
+An additional format specific information about the file:
+
+```C#
+// Get infogmation about webm file
+AVMetadata metadata = Image.Identify(decoderOptions, inputStream).Metadata.GetWebmMetadata();
+```
+[More extensions methods](https://github.com/hey-red/ImageSharp.AVCodecFormats/blob/master/src/ImageSharp.AVCodecFormats/MetadataExtensions.cs)
+
 ## Supported formats
 mp4, webm, avi, mkv, mov, ts, wmv, mp3(cover image).
 
