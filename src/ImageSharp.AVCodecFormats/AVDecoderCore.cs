@@ -70,7 +70,9 @@ internal unsafe sealed class AVDecoderCore
             bitsPerPixel = ffmpeg.av_get_bits_per_pixel(desc);
         }
 
-        ImageMetadata metadata = GetMetadata(file, imageFormat);
+        var metadata = new ImageMetadata();
+        
+        FillMetadata(metadata, file, imageFormat);
 
         return new ImageInfo(
             new PixelTypeInfo(bitsPerPixel),
@@ -92,7 +94,7 @@ internal unsafe sealed class AVDecoderCore
             {
                 FlagDiscardCorrupt = true,
             },
-            StreamsToLoad = MediaMode.Video,
+            StreamsToLoad = MediaMode.AudioVideo,
         });
 
         Image<TPixel>? resultImage = null;
@@ -152,6 +154,11 @@ internal unsafe sealed class AVDecoderCore
             throw;
         }
 
+        if (!decoderOptions.SkipMetadata)
+        {
+            FillMetadata(resultImage.Metadata, file, imageFormat);
+        }
+
         return resultImage;
     }
 
@@ -165,10 +172,8 @@ internal unsafe sealed class AVDecoderCore
         _ => throw new ArgumentException("Unsupported pixel format."),
     };
 
-    private static ImageMetadata GetMetadata(MediaFile file, IImageFormat<AVMetadata> imageFormat)
+    private static void FillMetadata(ImageMetadata metadata, MediaFile file, IImageFormat<AVMetadata> imageFormat)
     {
-        var metadata = new ImageMetadata();
-
         AVMetadata avMetadata = metadata.GetFormatMetadata(imageFormat);
 
         avMetadata.ContainerFormat = file.Info.ContainerFormat;
@@ -207,8 +212,6 @@ internal unsafe sealed class AVDecoderCore
 
         avMetadata.VideoStreams = videoStreams;
         avMetadata.AudioStreams = audioStreams;
-
-        return metadata;
     }
 
     private DrawingSize? CalculateTargetFrameSize(Stream stream, IImageFormat<AVMetadata> imageFormat)
