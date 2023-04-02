@@ -109,6 +109,7 @@ internal unsafe sealed class AVDecoderCore
                 if (resultImage == default)
                 {
                     resultImage = Image.LoadPixelData<TPixel>(
+                        decoderOptions.Configuration,
                         frame.Data,
                         frame.ImageSize.Width,
                         frame.ImageSize.Height);
@@ -125,6 +126,7 @@ internal unsafe sealed class AVDecoderCore
                 else
                 {
                     using var image = Image.LoadPixelData<TPixel>(
+                        decoderOptions.Configuration,
                         frame.Data,
                         frame.ImageSize.Width,
                         frame.ImageSize.Height);
