@@ -11,6 +11,7 @@ public sealed class Mp3ConfigurationModule : IImageFormatConfigurationModule
     public void Configure(Configuration configuration)
     {
         configuration.ImageFormatsManager.SetDecoder(Mp3Format.Instance, Mp3Decoder.Instance);
+        configuration.ImageFormatsManager.SetEncoder(Mp3Format.Instance, new Mp3Encoder());
         configuration.ImageFormatsManager.AddImageFormatDetector(new Mp3FormatDetector());
     }
 }

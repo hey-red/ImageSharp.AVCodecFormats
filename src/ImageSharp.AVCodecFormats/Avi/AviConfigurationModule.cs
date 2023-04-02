@@ -11,6 +11,7 @@ public sealed class AviConfigurationModule : IImageFormatConfigurationModule
     public void Configure(Configuration configuration)
     {
         configuration.ImageFormatsManager.SetDecoder(AviFormat.Instance, AviDecoder.Instance);
+        configuration.ImageFormatsManager.SetEncoder(AviFormat.Instance, new AviEncoder());
         configuration.ImageFormatsManager.AddImageFormatDetector(new AviFormatDetector());
     }
 }

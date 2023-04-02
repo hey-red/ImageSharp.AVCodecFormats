@@ -11,6 +11,7 @@ public sealed class MovConfigurationModule : IImageFormatConfigurationModule
     public void Configure(Configuration configuration)
     {
         configuration.ImageFormatsManager.SetDecoder(MovFormat.Instance, MovDecoder.Instance);
+        configuration.ImageFormatsManager.SetEncoder(MovFormat.Instance, new MovEncoder());
         configuration.ImageFormatsManager.AddImageFormatDetector(new MovFormatDetector());
     }
 }

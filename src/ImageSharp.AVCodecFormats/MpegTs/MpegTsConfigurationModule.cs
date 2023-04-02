@@ -11,6 +11,7 @@ public sealed class MpegTsConfigurationModule : IImageFormatConfigurationModule
     public void Configure(Configuration configuration)
     {
         configuration.ImageFormatsManager.SetDecoder(MpegTsFormat.Instance, MpegTsDecoder.Instance);
+        configuration.ImageFormatsManager.SetEncoder(MpegTsFormat.Instance, new MpegTsEncoder());
         configuration.ImageFormatsManager.AddImageFormatDetector(new MpegTsFormatDetector());
     }
 }
