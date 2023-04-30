@@ -194,6 +194,7 @@ internal unsafe sealed class AVDecoderCore
                 Duration = videoStream.Info.Duration,
                 AvgFrameRate = videoStream.Info.AvgFrameRate,
                 FramesCount = videoStream.Info.NumberOfFrames,
+                Rotation = videoStream.Info.Rotation,
             };
 
             videoStreams.Add(videStreamInfo);

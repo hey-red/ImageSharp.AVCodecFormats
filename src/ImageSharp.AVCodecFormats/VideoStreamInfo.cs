@@ -24,4 +24,9 @@ public sealed class VideoStreamInfo
     /// Returns <see langword="null"/> if not available.
     /// </summary>
     public int? FramesCount { get; internal set; }
+
+    /// <summary>
+    /// Gets the clockwise rotation angle computed from the display matrix.
+    /// </summary>
+    public double Rotation { get; internal set; }
 }
