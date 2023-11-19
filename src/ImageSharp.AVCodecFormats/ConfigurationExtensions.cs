@@ -4,6 +4,7 @@ using HeyRed.ImageSharp.AVCodecFormats.Mov;
 using HeyRed.ImageSharp.AVCodecFormats.Mp3;
 using HeyRed.ImageSharp.AVCodecFormats.Mp4;
 using HeyRed.ImageSharp.AVCodecFormats.MpegTs;
+using HeyRed.ImageSharp.AVCodecFormats.Ogg;
 using HeyRed.ImageSharp.AVCodecFormats.Webm;
 using HeyRed.ImageSharp.AVCodecFormats.Wmv;
 
@@ -23,6 +24,7 @@ public static class ConfigurationExtensions
         configuration.Configure(new WmvConfigurationModule());
         configuration.Configure(new MpegTsConfigurationModule());
         configuration.Configure(new Mp3ConfigurationModule());
+        configuration.Configure(new OggConfigurationModule());
 
         return configuration;
     }

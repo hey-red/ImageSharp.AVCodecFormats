@@ -4,6 +4,7 @@ using HeyRed.ImageSharp.AVCodecFormats.Mov;
 using HeyRed.ImageSharp.AVCodecFormats.Mp3;
 using HeyRed.ImageSharp.AVCodecFormats.Mp4;
 using HeyRed.ImageSharp.AVCodecFormats.MpegTs;
+using HeyRed.ImageSharp.AVCodecFormats.Ogg;
 using HeyRed.ImageSharp.AVCodecFormats.Webm;
 using HeyRed.ImageSharp.AVCodecFormats.Wmv;
 
@@ -71,4 +72,11 @@ public static partial class MetadataExtensions
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata"/>.</returns>
     public static AVMetadata GetWmvMetadata(this ImageMetadata metadata) => metadata.GetFormatMetadata(WmvFormat.Instance);
+
+    /// <summary>
+    /// Gets the ogg format specific metadata for the file.
+    /// </summary>
+    /// <param name="metadata">The metadata this method extends.</param>
+    /// <returns>The <see cref="AVMetadata"/>.</returns>
+    public static AVMetadata GetOggMetadata(this ImageMetadata metadata) => metadata.GetFormatMetadata(OggFormat.Instance);
 }

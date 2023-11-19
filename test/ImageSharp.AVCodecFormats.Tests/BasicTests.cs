@@ -57,6 +57,7 @@ public class BasicTests
     [InlineData("vp8.webm", 344, 360)]
     [InlineData("mpga.mp3", 700, 700)]
     [InlineData("two_video_stream.webm", 640, 480)]
+    [InlineData("opus.oga", 700, 700)]
     public void IdentifyTests(string fileName, int width, int height)
     {
         string filePath = Path.Combine(_testVideoDataPath, fileName);
@@ -87,6 +88,7 @@ public class BasicTests
     [InlineData("vp9.webm", 1280, 720, 200, 112)]
     [InlineData("vp8.webm", 344, 360, 191, 200)]
     [InlineData("mpga.mp3", 700, 700, 200, 200)]
+    [InlineData("opus.oga", 700, 700, 200, 200)]
     public void ThumbnailTests(
         string fileName,
         int width, int height,
