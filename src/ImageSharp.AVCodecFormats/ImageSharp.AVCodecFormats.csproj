@@ -4,7 +4,7 @@
   
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <version>4.3.0</version>
+    <version>4.4.0</version>
     <Authors>red</Authors>
     <RootNamespace>HeyRed.ImageSharp.AVCodecFormats</RootNamespace>
     <LangVersion>latest</LangVersion>
