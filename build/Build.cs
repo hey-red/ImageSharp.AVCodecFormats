@@ -3,24 +3,23 @@ using System.IO;
 using System.Net.Http;
 
 using Nuke.Common;
-
+using Nuke.Common.IO;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.NuGet;
 
-using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.Tools.NuGet.NuGetTasks;
 
 namespace Build
 {
     public class Build : NukeBuild
     {
-        private const string NATIVE_VERSION = "1.6.0";
+        private const string NATIVE_VERSION = "2.0.0";
 
         private readonly IEnumerable<string> _architectures = new[] { "linux-x64", "win-x64" };
 
-        private readonly string _packagesPath = Path.Combine(RootDirectory, "packages");
+        private readonly AbsolutePath _packagesPath = RootDirectory / "packages";
 
-        private readonly string _binPath = Path.Combine(RootDirectory, "build", "binaries");
+        private readonly AbsolutePath _binPath = RootDirectory / "build" / "binaries";
 
         private Target DownloadBinaries => _ => _
                  .Executes(async () =>
@@ -72,8 +71,8 @@ namespace Build
         private Target CleanUp => _ => _
                  .Executes(() =>
                  {
-                     EnsureCleanDirectory(_packagesPath);
-                     EnsureCleanDirectory(_binPath);
+                     _packagesPath.CreateOrCleanDirectory();
+                     _binPath.CreateOrCleanDirectory();
                  });
 
         private Target All => _ => _
