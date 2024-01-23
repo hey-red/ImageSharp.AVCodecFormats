@@ -71,7 +71,7 @@ internal unsafe sealed class AVDecoderCore
         }
 
         var metadata = new ImageMetadata();
-        
+
         FillMetadata(metadata, file, imageFormat);
 
         return new ImageInfo(
@@ -195,6 +195,7 @@ internal unsafe sealed class AVDecoderCore
                 AvgFrameRate = videoStream.Info.AvgFrameRate,
                 FramesCount = videoStream.Info.NumberOfFrames,
                 Rotation = videoStream.Info.Rotation,
+                SampleAspectRatio = videoStream.Info.SampleAspectRatio,
             };
 
             videoStreams.Add(videStreamInfo);

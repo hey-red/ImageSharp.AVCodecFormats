@@ -1,5 +1,7 @@
 ﻿using System;
 
+using FFmpeg.AutoGen;
+
 namespace HeyRed.ImageSharp.AVCodecFormats;
 
 public sealed class VideoStreamInfo
@@ -29,4 +31,10 @@ public sealed class VideoStreamInfo
     /// Gets the clockwise rotation angle computed from the display matrix.
     /// </summary>
     public double Rotation { get; internal set; }
+
+    /// <summary>
+    /// Gets sample aspect ratio.
+    /// 0 if unknown.
+    /// </summary>
+    public AVRational SampleAspectRatio { get; internal set; }
 }
