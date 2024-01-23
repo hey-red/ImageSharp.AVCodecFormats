@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="FFmpeg.AutoGen" Version="6.1.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.2" />
   </ItemGroup>
 
   <ItemGroup>
