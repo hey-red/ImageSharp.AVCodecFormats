@@ -90,6 +90,7 @@ internal unsafe sealed class AVDecoderCore
             // Map imagesharp pixel format to ffmpeg pixel format
             VideoPixelFormat = MapPixelFormat(default(TPixel)),
             TargetVideoSize = targetFrameSize,
+            RespectSampleAspectRatio = options.RespectSampleAspectRatio,
             DemuxerOptions = new ContainerOptions
             {
                 FlagDiscardCorrupt = true,
