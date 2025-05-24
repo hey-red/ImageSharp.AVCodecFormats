@@ -14,7 +14,7 @@ namespace Build;
 
 public class Build : NukeBuild
 {
-    private const string NATIVE_VERSION = "2.0.0";
+    private const string NATIVE_VERSION = "3.0.0";
 
     private readonly IEnumerable<string> _architectures = new[] { "linux-x64", "win-x64" };
 
