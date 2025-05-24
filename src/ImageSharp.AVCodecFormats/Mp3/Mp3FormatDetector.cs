@@ -7,7 +7,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp3;
 
 public sealed class Mp3FormatDetector : IImageFormatDetector
 {
-    public int HeaderSize => 5120;
+    public int HeaderSize => 51200;
 
     public bool TryDetectFormat(ReadOnlySpan<byte> header, [NotNullWhen(true)] out IImageFormat? format)
     {
