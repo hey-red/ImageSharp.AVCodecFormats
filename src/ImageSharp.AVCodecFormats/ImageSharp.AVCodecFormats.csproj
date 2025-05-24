@@ -1,36 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
-  <Import Project="./package.props" /> 
-  
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <version>4.6.0</version>
-    <Authors>red</Authors>
-    <RootNamespace>HeyRed.ImageSharp.AVCodecFormats</RootNamespace>
-    <LangVersion>latest</LangVersion>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Nullable>enable</Nullable>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Description>Package contains a bunch of ffmpeg-based decoders that allows to extract frames from video and processing it's using ImageSharp.</Description>
-    <PackageReleaseNotes>https://github.com/hey-red/ImageSharp.AVCodecFormats/releases</PackageReleaseNotes>
-    <PackageProjectUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>imagesharp;ffmpeg;</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-  </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="FFmpeg.AutoGen" Version="7.1.1" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.8" />
-  </ItemGroup>
+    <Import Project="./package.props"/>
 
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <version>4.6.0</version>
+        <Authors>red</Authors>
+        <RootNamespace>HeyRed.ImageSharp.AVCodecFormats</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Nullable>enable</Nullable>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Description>Package contains a bunch of ffmpeg-based decoders that allows to extract frames from video and processing it's using ImageSharp.</Description>
+        <PackageReleaseNotes>https://github.com/hey-red/ImageSharp.AVCodecFormats/releases</PackageReleaseNotes>
+        <PackageProjectUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>imagesharp;ffmpeg;</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\FFMediaToolkit\FFMediaToolkit\FFMediaToolkit.csproj" PrivateAssets="All" />
-  </ItemGroup>
-  
+    <ItemGroup>
+        <PackageReference Include="FFmpeg.AutoGen" Version="7.1.1"/>
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.8"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\FFMediaToolkit\FFMediaToolkit\FFMediaToolkit.csproj" PrivateAssets="All"/>
+    </ItemGroup>
+
 </Project>

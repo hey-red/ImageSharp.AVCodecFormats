@@ -3,6 +3,8 @@
 using HeyRed.ImageSharp.AVCodecFormats;
 using HeyRed.ImageSharp.AVCodecFormats.Mp4;
 
+using SixLabors.ImageSharp;
+
 using Xunit;
 
 namespace ImageSharp.AVCodecFormats.Tests;
@@ -21,10 +23,10 @@ public class FramesCountTests
     [InlineData("black_frame.mp4", 600)]
     public void TestFramesCounter(string fileName, int framesCount)
     {
-        string filePath = Path.Combine(_testVideoDataPath, fileName);
+        var filePath = Path.Combine(_testVideoDataPath, fileName);
 
-        using var inputStream = File.OpenRead(filePath);
-        using var image = Mp4Decoder.Instance.Decode(new AVDecoderOptions(), inputStream);
+        using FileStream inputStream = File.OpenRead(filePath);
+        using Image image = Mp4Decoder.Instance.Decode(new AVDecoderOptions(), inputStream);
 
         Assert.Equal(framesCount, image.Frames.Count);
     }

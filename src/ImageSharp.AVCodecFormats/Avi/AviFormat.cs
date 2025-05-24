@@ -11,7 +11,7 @@ public sealed class AviFormat : IImageFormat<AVMetadata>
     }
 
     /// <summary>
-    /// Gets the current instance.
+    ///     Gets the current instance.
     /// </summary>
     public static AviFormat Instance { get; } = new();
 

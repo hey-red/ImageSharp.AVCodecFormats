@@ -6,7 +6,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Webm;
 public sealed class WebmConfigurationModule : IImageFormatConfigurationModule
 {
     /// <summary>
-    /// Registers the image encoders, decoders and mime type detectors for the webm format.
+    ///     Registers the image encoders, decoders and mime type detectors for the webm format.
     /// </summary>
     public void Configure(Configuration configuration)
     {

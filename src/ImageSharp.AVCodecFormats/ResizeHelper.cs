@@ -11,16 +11,16 @@ internal static class ResizeHelper
         int width,
         int height)
     {
-        int targetWidth = width;
-        int targetHeight = height;
+        var targetWidth = width;
+        var targetHeight = height;
 
         // Fractional variants for preserving aspect ratio.
-        float percentHeight = MathF.Abs(height / (float)source.Height);
-        float percentWidth = MathF.Abs(width / (float)source.Width);
+        var percentHeight = MathF.Abs(height / (float)source.Height);
+        var percentWidth = MathF.Abs(width / (float)source.Width);
 
         // Integers must be cast to floats to get needed precision
-        float ratio = height / (float)width;
-        float sourceRatio = source.Height / (float)source.Width;
+        var ratio = height / (float)width;
+        var sourceRatio = source.Height / (float)source.Width;
 
         if (sourceRatio < ratio)
         {

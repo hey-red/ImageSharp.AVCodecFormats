@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 using HeyRed.ImageSharp.AVCodecFormats;
 using HeyRed.ImageSharp.AVCodecFormats.Mp4;
@@ -22,7 +21,7 @@ public class FrameFilterTests
     }
 
     /// <summary>
-    /// Adapted from https://github.com/FFmpeg/FFmpeg/blob/master/libavfilter/vf_blackframe.c
+    ///     Adapted from https://github.com/FFmpeg/FFmpeg/blob/master/libavfilter/vf_blackframe.c
     /// </summary>
     /// <param name="frame"></param>
     /// <param name="frameNum"></param>
@@ -32,23 +31,23 @@ public class FrameFilterTests
         var image = (ImageFrame<Rgba32>)frame;
 
         // The threshold below which a pixel value is considered black
-        int threshold = 32;
+        var threshold = 32;
         // The percentage of the pixels that have to be below the threshold
         // for the frame to be considered black
-        int percents = 98;
+        var percents = 98;
 
-        int blackPixelsCount = 0;
+        var blackPixelsCount = 0;
         image.ProcessPixelRows(accessor =>
         {
-            for (int y = 0; y < accessor.Height; y++)
+            for (var y = 0; y < accessor.Height; y++)
             {
-                Span<Rgba32> pixelRow = accessor.GetRowSpan(y);
+                var pixelRow = accessor.GetRowSpan(y);
 
-                for (int x = 0; x < pixelRow.Length; x++)
+                for (var x = 0; x < pixelRow.Length; x++)
                 {
                     Rgba32 pixel = pixelRow[x];
 
-                    int value = (pixel.R + pixel.G + pixel.B) / 3;
+                    var value = (pixel.R + pixel.G + pixel.B) / 3;
                     if (value < threshold)
                     {
                         blackPixelsCount++;
@@ -57,7 +56,7 @@ public class FrameFilterTests
             }
         });
 
-        int blackPercent = blackPixelsCount * 100 / (frame.Width * frame.Height);
+        var blackPercent = blackPixelsCount * 100 / (frame.Width * frame.Height);
 
         return blackPercent >= percents;
     }
@@ -71,16 +70,16 @@ public class FrameFilterTests
         {
             GeneralOptions = new DecoderOptions
             {
-                MaxFrames = 10,
+                MaxFrames = 10
             },
-            FrameFilter = BlackFrameFilter,
+            FrameFilter = BlackFrameFilter
         };
 
-        string filePath = Path.Combine(_testVideoDataPath, fileName);
+        var filePath = Path.Combine(_testVideoDataPath, fileName);
 
-        using var inputStream = File.OpenRead(filePath);
-        using var image = Mp4Decoder.Instance.Decode(decoderOptions, inputStream);
+        using FileStream inputStream = File.OpenRead(filePath);
+        using Image image = Mp4Decoder.Instance.Decode(decoderOptions, inputStream);
 
-        Assert.Equal(expectedFramesCount, image.Frames.Count); 
+        Assert.Equal(expectedFramesCount, image.Frames.Count);
     }
 }

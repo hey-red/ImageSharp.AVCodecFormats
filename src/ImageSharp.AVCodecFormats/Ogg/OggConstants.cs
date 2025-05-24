@@ -5,7 +5,8 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Ogg;
 
 internal static class OggConstants
 {
-    public static readonly IEnumerable<string> FileExtensions = new[] { "ogg", "ogv", "oga", "ogx", "ogm", "spx", "opus" };
+    public static readonly IEnumerable<string> FileExtensions = new[]
+        { "ogg", "ogv", "oga", "ogx", "ogm", "spx", "opus" };
 
     public static readonly IEnumerable<string> MimeTypes = new[] { "video/ogg", "audio/ogg", "application/ogg" };
 

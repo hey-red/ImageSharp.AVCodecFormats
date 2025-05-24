@@ -10,11 +10,11 @@ internal static class MovConstants
 
     public static readonly byte[] FtypQtMarker =
     {
-        0x66,   // f
-        0x74,   // t
-        0x79,   // y
-        0x70,   // p
-        0x71,   // q
-        0x74,   // t
+        0x66, // f
+        0x74, // t
+        0x79, // y
+        0x70, // p
+        0x71, // q
+        0x74 // t
     };
 }

@@ -6,9 +6,9 @@ using SixLabors.ImageSharp.Formats;
 namespace HeyRed.ImageSharp.AVCodecFormats.Ogg;
 
 /// <summary>
-/// TODO: detect theora/OGM
-/// COVERART/METADATA_BLOCK_PICTURE for opus, vorbis and FLAC
-/// index >>28
+///     TODO: detect theora/OGM
+///     COVERART/METADATA_BLOCK_PICTURE for opus, vorbis and FLAC
+///     index >>28
 /// </summary>
 public sealed class OggFormatDetector : IImageFormatDetector
 {

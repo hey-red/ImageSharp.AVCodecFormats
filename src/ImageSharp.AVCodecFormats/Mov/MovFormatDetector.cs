@@ -6,7 +6,7 @@ using SixLabors.ImageSharp.Formats;
 namespace HeyRed.ImageSharp.AVCodecFormats.Mov;
 
 /// <summary>
-/// TODO: mdat, wide etc.
+///     TODO: mdat, wide etc.
 /// </summary>
 public sealed class MovFormatDetector : IImageFormatDetector
 {

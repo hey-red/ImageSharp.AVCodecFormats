@@ -6,7 +6,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Avi;
 public sealed class AviConfigurationModule : IImageFormatConfigurationModule
 {
     /// <summary>
-    /// Registers the image encoders, decoders and mime type detectors for the avi format.
+    ///     Registers the image encoders, decoders and mime type detectors for the avi format.
     /// </summary>
     public void Configure(Configuration configuration)
     {

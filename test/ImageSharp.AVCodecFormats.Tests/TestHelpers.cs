@@ -12,7 +12,7 @@ public static class TestHelpers
     {
         var assemblyLocation = typeof(TestHelpers).GetTypeInfo().Assembly.Location;
         var assemblyFile = new FileInfo(assemblyLocation);
-        var directoryInfo = assemblyFile.Directory;
+        DirectoryInfo directoryInfo = assemblyFile.Directory;
 
         while (!directoryInfo.EnumerateDirectories(TEST_DIR).Any())
         {

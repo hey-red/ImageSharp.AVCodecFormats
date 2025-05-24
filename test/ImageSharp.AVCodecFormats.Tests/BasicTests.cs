@@ -15,13 +15,12 @@ namespace ImageSharp.AVCodecFormats.Tests;
 
 public class BasicTests
 {
-    private readonly string _testVideoDataPath;
+    private readonly DecoderOptions _decoderOptions;
 
     private readonly ITestOutputHelper _output;
 
-    private readonly DecoderOptions _decoderOptions;
-
     private readonly ResizeOptions _resizeOptions;
+    private readonly string _testVideoDataPath;
 
     public BasicTests(ITestOutputHelper output)
     {
@@ -43,7 +42,7 @@ public class BasicTests
 
     private IImageFormat GetFormat(string format)
         => _decoderOptions.Configuration.ImageFormats
-        .FirstOrDefault(x => x.FileExtensions.Contains(format));
+            .FirstOrDefault(x => x.FileExtensions.Contains(format));
 
     [Theory]
     [InlineData("avc.mp4", 640, 360)]
@@ -60,14 +59,14 @@ public class BasicTests
     [InlineData("opus.oga", 700, 700)]
     public void IdentifyTests(string fileName, int width, int height)
     {
-        string filePath = Path.Combine(_testVideoDataPath, fileName);
-        string extension = Path.GetExtension(filePath).Replace(".", "");
+        var filePath = Path.Combine(_testVideoDataPath, fileName);
+        var extension = Path.GetExtension(filePath).Replace(".", "");
 
         IImageFormat format = GetFormat(extension);
 
         _output.WriteLine($"Processing file: \"{Path.GetFileName(filePath)}\"");
 
-        using var inputStream = File.OpenRead(filePath);
+        using FileStream inputStream = File.OpenRead(filePath);
         ImageInfo imageInfo = Image.Identify(_decoderOptions, inputStream);
 
         _output.WriteLine($"Dimensions: {imageInfo.Width}x{imageInfo.Height}");
@@ -91,14 +90,16 @@ public class BasicTests
     [InlineData("opus.oga", 700, 700, 200, 200)]
     public void ThumbnailTests(
         string fileName,
-        int width, int height,
-        int thumbWidth, int thumbHeight)
+        int width,
+        int height,
+        int thumbWidth,
+        int thumbHeight)
     {
-        string filePath = Path.Combine(_testVideoDataPath, fileName);
+        var filePath = Path.Combine(_testVideoDataPath, fileName);
 
         _output.WriteLine($"Processing file: \"{Path.GetFileName(filePath)}\"");
 
-        using var inputStream = File.OpenRead(filePath);
+        using FileStream inputStream = File.OpenRead(filePath);
         using var outputStream = new MemoryStream();
         using var image = Image.Load(_decoderOptions, inputStream);
 

@@ -6,7 +6,7 @@ internal static class WmvConstants
 {
     public static readonly IEnumerable<string> FileExtensions = new[] { "wmv" };
 
-    public static readonly IEnumerable<string> MimeTypes = new[] { "video/x-ms-wmv", };
+    public static readonly IEnumerable<string> MimeTypes = new[] { "video/x-ms-wmv" };
 
     public static readonly byte[] AsfFormatHeader =
     {

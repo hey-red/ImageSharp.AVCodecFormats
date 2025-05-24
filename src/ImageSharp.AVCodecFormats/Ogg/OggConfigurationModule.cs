@@ -6,7 +6,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Ogg;
 public sealed class OggConfigurationModule : IImageFormatConfigurationModule
 {
     /// <summary>
-    /// Registers the image encoders, decoders and mime type detectors for the ogg format.
+    ///     Registers the image encoders, decoders and mime type detectors for the ogg format.
     /// </summary>
     public void Configure(Configuration configuration)
     {

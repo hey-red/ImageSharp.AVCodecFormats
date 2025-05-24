@@ -17,11 +17,11 @@ using DrawingSize = System.Drawing.Size;
 
 namespace HeyRed.ImageSharp.AVCodecFormats;
 
-internal unsafe sealed class AVDecoderCore
+internal sealed unsafe class AVDecoderCore
 {
     private static readonly object syncRoot = new();
 
-    private static bool initBinaries = false;
+    private static bool initBinaries;
 
     /// <inheritdoc />
     private readonly DecoderOptions decoderOptions;
@@ -61,10 +61,10 @@ internal unsafe sealed class AVDecoderCore
             throw new InvalidDataException("The file has no video streams.");
         }
 
-        int bitsPerPixel = 0;
+        var bitsPerPixel = 0;
 
         AVPixelFormat pixFormat = ffmpeg.av_get_pix_fmt(file.Video.Info.PixelFormat);
-        AVPixFmtDescriptor* desc = ffmpeg.av_pix_fmt_desc_get(pixFormat);
+        var desc = ffmpeg.av_pix_fmt_desc_get(pixFormat);
         if (desc != null)
         {
             bitsPerPixel = ffmpeg.av_get_bits_per_pixel(desc);
@@ -80,10 +80,13 @@ internal unsafe sealed class AVDecoderCore
             metadata);
     }
 
-    public Image<TPixel> Decode<TPixel>(Stream stream, IImageFormat<AVMetadata> imageFormat, CancellationToken cancellationToken)
-       where TPixel : unmanaged, IPixel<TPixel>
+    public Image<TPixel> Decode<TPixel>(
+        Stream stream,
+        IImageFormat<AVMetadata> imageFormat,
+        CancellationToken cancellationToken)
+        where TPixel : unmanaged, IPixel<TPixel>
     {
-        DrawingSize? targetFrameSize = CalculateTargetFrameSize(stream, imageFormat);
+        var targetFrameSize = CalculateTargetFrameSize(stream, imageFormat);
 
         using var file = MediaFile.Open(stream, new MediaOptions
         {
@@ -93,9 +96,9 @@ internal unsafe sealed class AVDecoderCore
             RespectSampleAspectRatio = options.RespectSampleAspectRatio,
             DemuxerOptions = new ContainerOptions
             {
-                FlagDiscardCorrupt = true,
+                FlagDiscardCorrupt = true
             },
-            StreamsToLoad = MediaMode.AudioVideo,
+            StreamsToLoad = MediaMode.AudioVideo
         });
 
         Image<TPixel>? resultImage = null;
@@ -172,7 +175,7 @@ internal unsafe sealed class AVDecoderCore
         Rgba32 _ => ImagePixelFormat.Rgba32,
         Argb32 _ => ImagePixelFormat.Argb32,
         Bgra32 _ => ImagePixelFormat.Bgra32,
-        _ => throw new ArgumentException("Unsupported pixel format."),
+        _ => throw new ArgumentException("Unsupported pixel format.")
     };
 
     private static void FillMetadata(ImageMetadata metadata, MediaFile file, IImageFormat<AVMetadata> imageFormat)
@@ -187,29 +190,29 @@ internal unsafe sealed class AVDecoderCore
         var videoStreams = new List<VideoStreamInfo>();
         var audioStreams = new List<AudioStreamInfo>();
 
-        foreach (var videoStream in file.VideoStreams)
+        foreach (VideoStream? videoStream in file.VideoStreams)
         {
-            var videStreamInfo = new VideoStreamInfo()
+            var videStreamInfo = new VideoStreamInfo
             {
                 CodecName = videoStream.Info.CodecName,
                 Duration = videoStream.Info.Duration,
                 AvgFrameRate = videoStream.Info.AvgFrameRate,
                 FramesCount = videoStream.Info.NumberOfFrames,
                 Rotation = videoStream.Info.Rotation,
-                SampleAspectRatio = videoStream.Info.SampleAspectRatio,
+                SampleAspectRatio = videoStream.Info.SampleAspectRatio
             };
 
             videoStreams.Add(videStreamInfo);
         }
 
-        foreach (var audioStream in file.AudioStreams)
+        foreach (AudioStream? audioStream in file.AudioStreams)
         {
-            var audioStreamInfo = new AudioStreamInfo()
+            var audioStreamInfo = new AudioStreamInfo
             {
                 CodecName = audioStream.Info.CodecName,
                 Duration = audioStream.Info.Duration,
                 NumChannels = audioStream.Info.NumChannels,
-                SampleRate = audioStream.Info.SampleRate,
+                SampleRate = audioStream.Info.SampleRate
             };
 
             audioStreams.Add(audioStreamInfo);
@@ -229,7 +232,7 @@ internal unsafe sealed class AVDecoderCore
             {
                 ImageInfo sourceInfo = Identify(stream, imageFormat, CancellationToken.None);
 
-                var sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
+                Size sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
                     sourceInfo.Size,
                     decoderOptions.TargetSize.Value.Width,
                     decoderOptions.TargetSize.Value.Height);

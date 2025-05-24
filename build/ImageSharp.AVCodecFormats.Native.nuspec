@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2013/01/nuspec.xsd">
-  <metadata>
-    <id>ImageSharp.AVCodecFormats.Native</id>
-    <title>FFmpeg native binaries</title>
-    <version>$version$</version>
-    <description>This package contains native ffmpeg binaries</description>
-    <projectUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats</projectUrl>
-    <tags>ffmpeg binaries</tags>
+    <metadata>
+        <id>ImageSharp.AVCodecFormats.Native</id>
+        <title>FFmpeg native binaries</title>
+        <version>$version$</version>
+        <description>This package contains native ffmpeg binaries</description>
+        <projectUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats</projectUrl>
+        <tags>ffmpeg binaries</tags>
 
-    <authors>red</authors>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <license type="expression">MIT</license>
+        <authors>red</authors>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <license type="expression">MIT</license>
 
-    <dependencies>
-      <dependency id="ImageSharp.AVCodecFormats.Native.win-x64" version="$version$" include="native" />
-      <dependency id="ImageSharp.AVCodecFormats.Native.linux-x64" version="$version$" include="native" />
-    </dependencies>
-  </metadata>
+        <dependencies>
+            <dependency id="ImageSharp.AVCodecFormats.Native.win-x64" version="$version$" include="native"/>
+            <dependency id="ImageSharp.AVCodecFormats.Native.linux-x64" version="$version$" include="native"/>
+        </dependencies>
+    </metadata>
 
-  <files>
-    <file src="_._" target="lib/netstandard1.0" />
-  </files>
+    <files>
+        <file src="_._" target="lib/netstandard1.0"/>
+    </files>
 </package>

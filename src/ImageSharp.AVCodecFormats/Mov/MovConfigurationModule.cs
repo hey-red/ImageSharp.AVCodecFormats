@@ -6,7 +6,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mov;
 public sealed class MovConfigurationModule : IImageFormatConfigurationModule
 {
     /// <summary>
-    /// Registers the image encoders, decoders and mime type detectors for the mov format.
+    ///     Registers the image encoders, decoders and mime type detectors for the mov format.
     /// </summary>
     public void Configure(Configuration configuration)
     {

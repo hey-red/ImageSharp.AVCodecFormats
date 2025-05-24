@@ -16,7 +16,7 @@ internal static class FFmpegBinariesFinder
     {
         if (string.IsNullOrWhiteSpace(FFmpegBinaries.Path))
         {
-            string? libPath = FindFFmpegLibraryPath();
+            var libPath = FindFFmpegLibraryPath();
             if (libPath != null)
             {
                 FFmpegLoader.FFmpegPath = libPath; // override default path(ffmpeg.RootPath)
@@ -28,11 +28,20 @@ internal static class FFmpegBinariesFinder
     private static PlatformID GetCurrentPlatformId()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
             return PlatformID.Win32NT;
+        }
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
             return PlatformID.Unix;
+        }
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
             return PlatformID.MacOSX;
+        }
+
         throw new PlatformNotSupportedException();
     }
 
@@ -46,17 +55,17 @@ internal static class FFmpegBinariesFinder
         // Deconstruct available since netstandart2.1 :(
         var probeLib = ffmpeg.LibraryVersionMap.First();
         var libName = probeLib.Key;
-        int libVersion = probeLib.Value;
+        var libVersion = probeLib.Value;
 
         var (rid, libNameWithVersion) = currentPlatform switch
         {
             PlatformID.Win32NT => ("win", $"{libName}-{libVersion}.dll"),
             PlatformID.Unix => ("linux", $"lib{libName}.so.{libVersion}"),
-            _ => ("osx", $"lib{libName}.{libVersion}.dylib"),
+            _ => ("osx", $"lib{libName}.{libVersion}.dylib")
         };
 
         // Find inside current path
-        string libPath = Path.Combine(currentPath, libNameWithVersion);
+        var libPath = Path.Combine(currentPath, libNameWithVersion);
         if (File.Exists(libPath))
         {
             return currentPath;

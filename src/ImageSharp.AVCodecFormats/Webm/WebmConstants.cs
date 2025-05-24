@@ -14,7 +14,7 @@ internal static class WebmConstants
         0x1A,
         0x45,
         0xDF,
-        0xA3,
+        0xA3
     };
 
     public static readonly byte[] WebmMarker = Encoding.ASCII.GetBytes("webm");
