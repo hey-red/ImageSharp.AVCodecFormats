@@ -102,9 +102,6 @@ internal sealed unsafe class AVDecoderCore
         });
 
         Image<TPixel>? resultImage = null;
-
-        int frameWidth = file.Video.OutputFrameSize.Width;
-        int frameHeight = file.Video.OutputFrameSize.Height;
         
         uint frameCount = 0;
         try
@@ -114,8 +111,8 @@ internal sealed unsafe class AVDecoderCore
             
             using var tempImage = new Image<TPixel>(
                 config,
-                frameWidth,
-                frameHeight);
+                file.Video.OutputFrameSize.Width,
+                file.Video.OutputFrameSize.Height);
             
             if (!tempImage.DangerousTryGetSinglePixelMemory(out Memory<TPixel> memory))
             {
@@ -125,29 +122,68 @@ internal sealed unsafe class AVDecoderCore
 
             using MemoryHandle pinHandle = memory.Pin();
             var ptr = (IntPtr)pinHandle.Pointer;
- 
-            while (file.Video.TryGetNextFrame(ptr, file.Video.FrameStride))
+            
+            // Get frames by their timestamp
+            if (_options.FramesTimestamps.Length > 0)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                foreach (TimeSpan frameTimeSpan in _options.FramesTimestamps)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                bool mustBeSkipped = _options.FrameFilter?.Invoke(tempImage!.Frames.RootFrame, frameCount) is true;
+                    if (!file.Video.TryGetFrame(frameTimeSpan, ptr, file.Video.FrameStride))
+                    {
+                        // End of file
+                        continue;
+                    }
 
+                    bool mustBeSkipped = _options.FrameFilter?.Invoke(tempImage.Frames.RootFrame, frameCount) is true;
+                    if (resultImage is null)
+                    {
+                        if (!mustBeSkipped)
+                        {
+                            resultImage = tempImage.Clone();
+                        }
+                    }
+                    else if (!mustBeSkipped)
+                    {
+                        resultImage.Frames.AddFrame(tempImage.Frames.RootFrame);
+                    }
+                }
+                
+                // Fallback to first frame
                 if (resultImage is null)
                 {
-                    if (!mustBeSkipped ||
-                        frameCount + 1 == _decoderOptions.MaxFrames)
+                    file.Reset();
+                    if (file.Video.TryGetNextFrame(ptr, file.Video.FrameStride))
                     {
                         resultImage = tempImage.Clone();
                     }
                 }
-                else if (!mustBeSkipped)
+            }
+            else
+            {
+                while (file.Video.TryGetNextFrame(ptr, file.Video.FrameStride))
                 {
-                    resultImage.Frames.AddFrame(tempImage.Frames.RootFrame);
-                }
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                if (++frameCount == _decoderOptions.MaxFrames)
-                {
-                    break;
+                    bool mustBeSkipped = _options.FrameFilter?.Invoke(tempImage.Frames.RootFrame, frameCount) is true;
+                    if (resultImage is null)
+                    {
+                        if (!mustBeSkipped ||
+                            frameCount + 1 == _decoderOptions.MaxFrames)
+                        {
+                            resultImage = tempImage.Clone();
+                        }
+                    }
+                    else if (!mustBeSkipped)
+                    {
+                        resultImage.Frames.AddFrame(tempImage.Frames.RootFrame);
+                    }
+
+                    if (++frameCount == _decoderOptions.MaxFrames)
+                    {
+                        break;
+                    }
                 }
             }
 

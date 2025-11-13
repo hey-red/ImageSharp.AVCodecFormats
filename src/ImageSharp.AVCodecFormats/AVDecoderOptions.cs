@@ -21,6 +21,12 @@ public sealed class AVDecoderOptions : ISpecializedDecoderOptions
     public bool RespectSampleAspectRatio { get; set; }
 
     /// <summary>
+    ///     An array of timestamps from which frames will be extracted.
+    ///     Otherwise, frames will be extracted in order.
+    /// </summary>
+    public TimeSpan[] FramesTimestamps { get; set; } = [];
+
+    /// <summary>
     ///     A delegate that provides the way to skip frames based on their content.
     ///     The first argument is <see cref="ImageFrame" />, the second is the current frame number.
     ///     Returns true, when frame should be skipped, otherwise false.

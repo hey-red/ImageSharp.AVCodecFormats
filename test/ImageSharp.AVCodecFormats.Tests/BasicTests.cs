@@ -1,10 +1,13 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 
 using HeyRed.ImageSharp.AVCodecFormats;
+using HeyRed.ImageSharp.AVCodecFormats.Webm;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 
@@ -95,13 +98,13 @@ public class BasicTests
         int thumbWidth,
         int thumbHeight)
     {
-        var filePath = Path.Combine(_testVideoDataPath, fileName);
+        string filePath = Path.Combine(_testVideoDataPath, fileName);
 
         _output.WriteLine($"Processing file: \"{Path.GetFileName(filePath)}\"");
 
         using FileStream inputStream = File.OpenRead(filePath);
         using var outputStream = new MemoryStream();
-        using var image = Image.Load(_decoderOptions, inputStream);
+        using Image image = Image.Load(_decoderOptions, inputStream);
 
         _output.WriteLine($"Source dimensions: {image.Width}x{image.Height}");
 
@@ -118,5 +121,24 @@ public class BasicTests
         image.Save(outputStream, new JpegEncoder());
 
         Assert.NotEqual(0, outputStream.Length);
+    }
+
+    [Theory]
+    [InlineData("vp8.webm", new[] { 1, 3, 5, 6, 7, 8, 10, 15, 18, 20 })]
+    public void ExtractByTimestampTests(
+        string fileName,
+        int[] seconds)
+    {
+        var decoderOptions = new AVDecoderOptions
+        {
+           FramesTimestamps = seconds.Select(s => TimeSpan.FromSeconds(s)).ToArray()
+        };
+
+        string filePath = Path.Combine(_testVideoDataPath, fileName);
+
+        using FileStream inputStream = File.OpenRead(filePath);
+        using Image image = WebmDecoder.Instance.Decode(decoderOptions, inputStream);
+        
+        Assert.Equal(seconds.Length, image.Frames.Count);
     }
 }
