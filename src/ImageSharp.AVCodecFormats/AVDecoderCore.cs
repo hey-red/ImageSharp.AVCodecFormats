@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -19,39 +20,38 @@ namespace HeyRed.ImageSharp.AVCodecFormats;
 
 internal sealed unsafe class AVDecoderCore
 {
-    private static readonly object syncRoot = new();
+    private static readonly object _syncRoot = new();
 
-    private static bool initBinaries;
+    private static bool _initBinaries;
+    
+    private readonly DecoderOptions _decoderOptions;
 
-    /// <inheritdoc />
-    private readonly DecoderOptions decoderOptions;
-
-    private readonly AVDecoderOptions options;
+    private readonly AVDecoderOptions _options;
 
     public AVDecoderCore(AVDecoderOptions avDecoderOptions)
     {
-        if (!initBinaries)
+        if (!_initBinaries)
         {
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                if (!initBinaries)
+                if (!_initBinaries)
                 {
                     FFmpegBinariesFinder.FindBinaries();
 
-                    initBinaries = true;
+                    _initBinaries = true;
                 }
             }
         }
 
-        options = avDecoderOptions;
-        decoderOptions = avDecoderOptions.GeneralOptions;
+        _options = avDecoderOptions;
+        _decoderOptions = avDecoderOptions.GeneralOptions;
     }
 
     public ImageInfo Identify(Stream stream, IImageFormat<AVMetadata> imageFormat, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var file = MediaFile.Open(stream, new MediaOptions
+        using MediaFile? file = MediaFile.Open(stream, new MediaOptions
         {
             StreamsToLoad = MediaMode.AudioVideo
         });
@@ -88,12 +88,12 @@ internal sealed unsafe class AVDecoderCore
     {
         var targetFrameSize = CalculateTargetFrameSize(stream, imageFormat);
 
-        using var file = MediaFile.Open(stream, new MediaOptions
+        using MediaFile? file = MediaFile.Open(stream, new MediaOptions
         {
-            // Map imagesharp pixel format to ffmpeg pixel format
+            // Map ImageSharp pixel format to ffmpeg pixel format
             VideoPixelFormat = MapPixelFormat(default(TPixel)),
             TargetVideoSize = targetFrameSize,
-            RespectSampleAspectRatio = options.RespectSampleAspectRatio,
+            RespectSampleAspectRatio = _options.RespectSampleAspectRatio,
             DemuxerOptions = new ContainerOptions
             {
                 FlagDiscardCorrupt = true
@@ -103,46 +103,49 @@ internal sealed unsafe class AVDecoderCore
 
         Image<TPixel>? resultImage = null;
 
+        int frameWidth = file.Video.OutputFrameSize.Width;
+        int frameHeight = file.Video.OutputFrameSize.Height;
+        
         uint frameCount = 0;
         try
         {
-            while (file.Video.TryGetNextFrame(out ImageData frame))
+            Configuration config = _decoderOptions.Configuration.Clone();
+            config.PreferContiguousImageBuffers = true;
+            
+            using var tempImage = new Image<TPixel>(
+                config,
+                frameWidth,
+                frameHeight);
+            
+            if (!tempImage.DangerousTryGetSinglePixelMemory(out Memory<TPixel> memory))
+            {
+                throw new Exception(
+                    "This can only happen with multi-GB images or when PreferContiguousImageBuffers is not set to true.");
+            }
+
+            using MemoryHandle pinHandle = memory.Pin();
+            var ptr = (IntPtr)pinHandle.Pointer;
+ 
+            while (file.Video.TryGetNextFrame(ptr, file.Video.FrameStride))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (resultImage == default)
-                {
-                    resultImage = Image.LoadPixelData<TPixel>(
-                        decoderOptions.Configuration,
-                        frame.Data,
-                        frame.ImageSize.Width,
-                        frame.ImageSize.Height);
+                bool mustBeSkipped = _options.FrameFilter?.Invoke(tempImage!.Frames.RootFrame, frameCount) is true;
 
-                    if (options.FrameFilter?.Invoke(resultImage.Frames.RootFrame, frameCount) is true)
+                if (resultImage is null)
+                {
+                    if (!mustBeSkipped ||
+                        frameCount + 1 == _decoderOptions.MaxFrames)
                     {
-                        if (frameCount + 1 != decoderOptions.MaxFrames)
-                        {
-                            resultImage.Dispose();
-                            resultImage = null;
-                        }
+                        resultImage = tempImage.Clone();
                     }
                 }
-                else
+                else if (!mustBeSkipped)
                 {
-                    using var image = Image.LoadPixelData<TPixel>(
-                        decoderOptions.Configuration,
-                        frame.Data,
-                        frame.ImageSize.Width,
-                        frame.ImageSize.Height);
-
-                    if (options.FrameFilter is null ||
-                        options.FrameFilter?.Invoke(image.Frames.RootFrame, frameCount) is false)
-                    {
-                        resultImage.Frames.AddFrame(image.Frames.RootFrame);
-                    }
+                    resultImage.Frames.AddFrame(tempImage.Frames.RootFrame);
                 }
 
-                if (++frameCount == decoderOptions.MaxFrames)
+                if (++frameCount == _decoderOptions.MaxFrames)
                 {
                     break;
                 }
@@ -160,7 +163,7 @@ internal sealed unsafe class AVDecoderCore
             throw;
         }
 
-        if (!decoderOptions.SkipMetadata)
+        if (!_decoderOptions.SkipMetadata)
         {
             FillMetadata(resultImage.Metadata, file, imageFormat);
         }
@@ -225,33 +228,35 @@ internal sealed unsafe class AVDecoderCore
     private DrawingSize? CalculateTargetFrameSize(Stream stream, IImageFormat<AVMetadata> imageFormat)
     {
         DrawingSize? targetFrameSize = null;
-        if (decoderOptions.TargetSize != null)
+        if (_decoderOptions.TargetSize == null)
         {
-            // Calculate target size with aspect ratio
-            if (options.PreserveAspectRatio)
+            return targetFrameSize;
+        }
+
+        // Calculate target size with aspect ratio
+        if (_options.PreserveAspectRatio)
+        {
+            ImageInfo sourceInfo = Identify(stream, imageFormat, CancellationToken.None);
+
+            Size sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
+                sourceInfo.Size,
+                _decoderOptions.TargetSize.Value.Width,
+                _decoderOptions.TargetSize.Value.Height);
+
+            targetFrameSize = new DrawingSize(
+                sizeWithAspectRatio.Width,
+                sizeWithAspectRatio.Height);
+
+            if (stream.CanSeek)
             {
-                ImageInfo sourceInfo = Identify(stream, imageFormat, CancellationToken.None);
-
-                Size sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
-                    sourceInfo.Size,
-                    decoderOptions.TargetSize.Value.Width,
-                    decoderOptions.TargetSize.Value.Height);
-
-                targetFrameSize = new DrawingSize(
-                    sizeWithAspectRatio.Width,
-                    sizeWithAspectRatio.Height);
-
-                if (stream.CanSeek)
-                {
-                    stream.Position = 0;
-                }
+                stream.Position = 0;
             }
-            else
-            {
-                targetFrameSize = new DrawingSize(
-                    decoderOptions.TargetSize.Value.Width,
-                    decoderOptions.TargetSize.Value.Width);
-            }
+        }
+        else
+        {
+            targetFrameSize = new DrawingSize(
+                _decoderOptions.TargetSize.Value.Width,
+                _decoderOptions.TargetSize.Value.Height);
         }
 
         return targetFrameSize;

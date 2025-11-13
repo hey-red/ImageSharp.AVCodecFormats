@@ -34,20 +34,12 @@ public class TargetSizeOptionTests
             PreserveAspectRatio = aspectRatio
         };
 
-        var filePath = Path.Combine(_testVideoDataPath, "mpeg4.avi");
+        string filePath = Path.Combine(_testVideoDataPath, "mpeg4.avi");
 
         using FileStream inputStream = File.OpenRead(filePath);
         using Image image = AviDecoder.Instance.Decode(decoderOptions, inputStream);
 
-        if (!aspectRatio)
-        {
-            Assert.Equal(100, image.Width);
-            Assert.Equal(100, image.Height);
-        }
-        else
-        {
-            Assert.Equal(100, image.Width);
-            Assert.Equal(56, image.Height);
-        }
+        Assert.Equal(100, image.Width);
+        Assert.Equal(!aspectRatio ? 100 : 56, image.Height);
     }
 }
