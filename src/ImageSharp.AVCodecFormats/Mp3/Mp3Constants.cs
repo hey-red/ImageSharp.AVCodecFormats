@@ -14,11 +14,4 @@ internal static class Mp3Constants
         0x44, // D
         0x33 // 3
     };
-
-    public static readonly byte[] PicMarker =
-    {
-        0x50, // P
-        0x49, // I
-        0x43 // C
-    };
 }
