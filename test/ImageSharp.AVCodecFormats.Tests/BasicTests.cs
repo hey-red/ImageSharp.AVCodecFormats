@@ -7,7 +7,6 @@ using HeyRed.ImageSharp.AVCodecFormats.Webm;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 
