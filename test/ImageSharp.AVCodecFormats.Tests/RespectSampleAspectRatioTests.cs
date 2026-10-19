@@ -11,7 +11,7 @@ public class RespectSampleAspectRatioTests
     private readonly string _testVideoDataPath = TestHelpers.GetTestDataPath();
 
     [Theory]
-    [InlineData("karina.mp4", 608, 1080)]
+    [InlineData("karina.mp4", 1214, 2160)]
     public void BasicTest(string fileName, int width, int height)
     {
         var decoderOptions = new AVDecoderOptions
