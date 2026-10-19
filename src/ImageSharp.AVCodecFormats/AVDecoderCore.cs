@@ -2,18 +2,16 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
-
 using FFMediaToolkit.Decoding;
 using FFMediaToolkit.Graphics;
-
 using FFmpeg.AutoGen;
-
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Metadata;
 using SixLabors.ImageSharp.PixelFormats;
-
 using DrawingSize = System.Drawing.Size;
 
 namespace HeyRed.ImageSharp.AVCodecFormats;
@@ -23,7 +21,7 @@ internal sealed unsafe class AVDecoderCore
     private static readonly object _syncRoot = new();
 
     private static bool _initBinaries;
-    
+
     private readonly DecoderOptions _decoderOptions;
 
     private readonly AVDecoderOptions _options;
@@ -88,9 +86,8 @@ internal sealed unsafe class AVDecoderCore
     {
         var targetFrameSize = CalculateTargetFrameSize(stream, imageFormat);
 
-        using MediaFile? file = MediaFile.Open(stream, new MediaOptions
+        using var file = MediaFile.Open(stream, new MediaOptions
         {
-            // Map ImageSharp pixel format to ffmpeg pixel format
             VideoPixelFormat = MapPixelFormat(default(TPixel)),
             TargetVideoSize = targetFrameSize,
             RespectSampleAspectRatio = _options.RespectSampleAspectRatio,
@@ -102,101 +99,126 @@ internal sealed unsafe class AVDecoderCore
         });
 
         Image<TPixel>? resultImage = null;
-        
         uint frameCount = 0;
+
+        int width = file.Video.OutputFrameSize.Width;
+        int height = file.Video.OutputFrameSize.Height;
+        int bytesPerPixel = Unsafe.SizeOf<TPixel>();
+
+        // reusable scratch buffer for current frame only
+        var scratch = ArrayPool<TPixel>.Shared.Rent(width * height);
         try
         {
-            Configuration config = _decoderOptions.Configuration.Clone();
-            config.PreferContiguousImageBuffers = true;
-            
-            using var tempImage = new Image<TPixel>(
-                config,
-                file.Video.OutputFrameSize.Width,
-                file.Video.OutputFrameSize.Height);
-            
-            if (!tempImage.DangerousTryGetSinglePixelMemory(out Memory<TPixel> memory))
+            // We pin only the current scratch buffer, never the stored result image
+            GCHandle pinned = GCHandle.Alloc(scratch, GCHandleType.Pinned);
+            try
             {
-                throw new Exception(
-                    "This can only happen with multi-GB images or when PreferContiguousImageBuffers is not set to true.");
-            }
+                IntPtr ptr = pinned.AddrOfPinnedObject();
 
-            using MemoryHandle pinHandle = memory.Pin();
-            var ptr = (IntPtr)pinHandle.Pointer;
-            
-            // Get frames by their timestamp
-            if (_options.FramesTimestamps.Length > 0)
-            {
-                foreach (TimeSpan frameTimeSpan in _options.FramesTimestamps)
+                if (_options.FramesTimestamps.Length > 0)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (!file.Video.TryGetFrame(frameTimeSpan, ptr, file.Video.FrameStride))
+                    foreach (TimeSpan ts in _options.FramesTimestamps)
                     {
-                        // End of file
-                        continue;
-                    }
+                        cancellationToken.ThrowIfCancellationRequested();
 
-                    bool mustBeSkipped = _options.FrameFilter?.Invoke(tempImage.Frames.RootFrame, frameCount) is true;
-                    if (resultImage is null)
-                    {
-                        if (!mustBeSkipped)
+                        if (!file.Video.TryGetFrame(ts, ptr, width * bytesPerPixel))
                         {
-                            resultImage = tempImage.Clone();
+                            continue;
+                        }
+
+                        var current = Image.LoadPixelData<TPixel>(
+                            _decoderOptions.Configuration,
+                            CopyFromPinnedBuffer(scratch, width, height),
+                            width,
+                            height);
+
+                        bool mustBeSkipped = _options.FrameFilter?.Invoke(current.Frames.RootFrame, frameCount) is true;
+                        if (mustBeSkipped)
+                        {
+                            current.Dispose();
+                            continue;
+                        }
+
+                        if (resultImage is null)
+                        {
+                            resultImage = current;
+                        }
+                        else
+                        {
+                            resultImage.Frames.AddFrame(current.Frames.RootFrame);
+                        }
+
+                        if (++frameCount >= _decoderOptions.MaxFrames)
+                        {
+                            break;
                         }
                     }
-                    else if (!mustBeSkipped)
-                    {
-                        resultImage.Frames.AddFrame(tempImage.Frames.RootFrame);
-                    }
-                }
-                
-                // Fallback to first frame
-                if (resultImage is null)
-                {
-                    file.Reset();
-                    if (file.Video.TryGetNextFrame(ptr, file.Video.FrameStride))
-                    {
-                        resultImage = tempImage.Clone();
-                    }
-                }
-            }
-            else
-            {
-                while (file.Video.TryGetNextFrame(ptr, file.Video.FrameStride))
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
 
-                    bool mustBeSkipped = _options.FrameFilter?.Invoke(tempImage.Frames.RootFrame, frameCount) is true;
+                    // Fallback: first frame if no timestamp match
                     if (resultImage is null)
                     {
-                        if (!mustBeSkipped ||
-                            frameCount + 1 == _decoderOptions.MaxFrames)
+                        file.Reset();
+
+                        if (file.Video.TryGetNextFrame(ptr, width * bytesPerPixel))
                         {
-                            resultImage = tempImage.Clone();
+                            resultImage = Image.LoadPixelData(
+                                _decoderOptions.Configuration,
+                                CopyFromPinnedBuffer(scratch, width, height),
+                                width,
+                                height);
+                            ;
                         }
                     }
-                    else if (!mustBeSkipped)
+                }
+                else
+                {
+                    while (file.Video.TryGetNextFrame(ptr, width * bytesPerPixel))
                     {
-                        resultImage.Frames.AddFrame(tempImage.Frames.RootFrame);
-                    }
+                        cancellationToken.ThrowIfCancellationRequested();
 
-                    if (++frameCount == _decoderOptions.MaxFrames)
-                    {
-                        break;
+                        var current = Image.LoadPixelData<TPixel>(
+                            _decoderOptions.Configuration,
+                            CopyFromPinnedBuffer(scratch, width, height),
+                            width,
+                            height);
+
+                        bool mustBeSkipped = _options.FrameFilter?.Invoke(current.Frames.RootFrame, frameCount) is true;
+                        if (resultImage is null)
+                        {
+                            if (!mustBeSkipped || frameCount + 1 == _decoderOptions.MaxFrames)
+                            {
+                                resultImage = current;
+                            }
+                            else
+                            {
+                                current.Dispose();
+                            }
+                        }
+                        else if (!mustBeSkipped)
+                        {
+                            resultImage.Frames.AddFrame(current.Frames.RootFrame);
+                        }
+
+                        if (++frameCount >= _decoderOptions.MaxFrames)
+                        {
+                            break;
+                        }
                     }
                 }
             }
-
-            if (resultImage == null)
+            finally
             {
-                throw new InvalidDataException("No frames found.");
+                pinned.Free();
             }
         }
-        catch
+        finally
         {
-            resultImage?.Dispose();
+            ArrayPool<TPixel>.Shared.Return(scratch);
+        }
 
-            throw;
+        if (resultImage is null)
+        {
+            throw new InvalidDataException("No frames found.");
         }
 
         if (!_decoderOptions.SkipMetadata)
@@ -205,6 +227,14 @@ internal sealed unsafe class AVDecoderCore
         }
 
         return resultImage;
+    }
+
+    private static TPixel[] CopyFromPinnedBuffer<TPixel>(TPixel[] scratch, int width, int height)
+        where TPixel : unmanaged
+    {
+        var copy = new TPixel[width * height];
+        Array.Copy(scratch, copy, copy.Length);
+        return copy;
     }
 
     private static ImagePixelFormat MapPixelFormat<TPixel>(TPixel sourcePixelFormat) => sourcePixelFormat switch
