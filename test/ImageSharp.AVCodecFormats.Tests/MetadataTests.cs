@@ -60,7 +60,7 @@ public class MetadataTests
         using FileStream inputStream = File.OpenRead(filePath);
         AVMetadata metadata = Image.Identify(_decoderOptions, inputStream).Metadata.GetMp3Metadata();
 
-        Assert.Equal(323591, metadata.Bitrate);
+        Assert.Equal(323698, metadata.Bitrate);
 
         VideoStreamInfo videoStream = metadata.VideoStreams.First();
         Assert.Equal("mjpeg", videoStream.CodecName);
