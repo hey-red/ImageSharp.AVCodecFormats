@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using FFMediaToolkit.Decoding;
 using FFMediaToolkit.Graphics;
-using FFmpeg.AutoGen;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Metadata;
@@ -59,21 +58,11 @@ internal sealed unsafe class AVDecoderCore
             throw new InvalidDataException("The file has no video streams.");
         }
 
-        var bitsPerPixel = 0;
-
-        AVPixelFormat pixFormat = ffmpeg.av_get_pix_fmt(file.Video.Info.PixelFormat);
-        var desc = ffmpeg.av_pix_fmt_desc_get(pixFormat);
-        if (desc != null)
-        {
-            bitsPerPixel = ffmpeg.av_get_bits_per_pixel(desc);
-        }
-
         var metadata = new ImageMetadata();
 
         FillMetadata(metadata, file, imageFormat);
 
         return new ImageInfo(
-            new PixelTypeInfo(bitsPerPixel),
             new Size(file.Video.Info.FrameSize.Width, file.Video.Info.FrameSize.Height),
             metadata);
     }
@@ -166,7 +155,6 @@ internal sealed unsafe class AVDecoderCore
                                 CopyFromPinnedBuffer(scratch, width, height),
                                 width,
                                 height);
-                            ;
                         }
                     }
                 }
@@ -255,6 +243,7 @@ internal sealed unsafe class AVDecoderCore
         avMetadata.Bitrate = file.Info.Bitrate;
         avMetadata.Duration = file.Info.Duration;
         avMetadata.ContainerMetadata = file.Info.Metadata.Metadata;
+        avMetadata.PixelFormat = file.Video.Info.PixelFormat;
 
         var videoStreams = new List<VideoStreamInfo>();
         var audioStreams = new List<AudioStreamInfo>();
