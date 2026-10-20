@@ -1,45 +1,69 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 
-using Nuke.Common;
-using Nuke.Common.IO;
-using Nuke.Common.Tools.NuGet;
+using Fallout.Common;
+using Fallout.Common.IO;
+using Fallout.Common.Tools.DotNet;
 
 using Serilog;
 
-using static Nuke.Common.Tools.NuGet.NuGetTasks;
+using static Fallout.Common.Tools.DotNet.DotNetTasks;
 
 namespace Build;
 
-public class Build : NukeBuild
+public class Build : FalloutBuild
 {
-    private const string NATIVE_VERSION = "3.0.0";
+    private const string NativeVersion = "4.0.0";
 
-    private readonly IEnumerable<string> _architectures = new[] { "linux-x64", "win-x64" };
+    private static readonly string[] Architectures =
+    {
+        "linux-x64",
+        "win-x64"
+    };
 
     private readonly AbsolutePath _binPath = RootDirectory / "build" / "binaries";
-
     private readonly AbsolutePath _packagesPath = RootDirectory / "packages";
+    private readonly AbsolutePath _localFeedPath = RootDirectory / "artifacts" / "nuget-feed";
+
+    private void PackRuntimeProject(string projectName)
+    {
+        DotNetPack(p => p
+            .SetProject(RootDirectory / "packaging" / projectName)
+            .SetVersion(NativeVersion)
+            .SetOutputDirectory(_localFeedPath)
+            .SetProperty("NoWarn", "NU5128"));
+    }
+
+    private void PackMetaProject()
+    {
+        DotNetPack(p => p
+            .SetProject(RootDirectory / "packaging" / "ImageSharp.AVCodecFormats.Native.csproj")
+            .SetVersion(NativeVersion)
+            .SetOutputDirectory(_packagesPath)
+            .SetProperty("NoWarn", "NU5128")
+            .SetProperty("RestoreSources", _localFeedPath.ToString()));
+    }
 
     private Target DownloadBinaries => _ => _
         .Executes(async () =>
         {
-            var httpClient = new HttpClient();
+            using var httpClient = new HttpClient();
 
-            foreach (var architecture in _architectures)
+            foreach (var architecture in Architectures)
             {
-                var libTmpPath = Path.Combine(_binPath, architecture);
+                var libTmpPath = _binPath / architecture;
                 var tmpFile = Path.GetTempFileName();
 
                 var uri =
-                    $"https://github.com/hey-red/FFmpeg-Build/releases/download/{NATIVE_VERSION}/{architecture}-noencoders.tar.gz";
+                    $"https://github.com/hey-red/FFmpeg-Build/releases/download/{NativeVersion}/{architecture}-noencoders.tar.gz";
 
                 Log.Information($"Download tarball from {uri}");
-                using Stream response = await httpClient.GetStreamAsync(uri);
 
-                using (FileStream fs = File.OpenWrite(tmpFile))
+                await using (var response = await httpClient.GetStreamAsync(uri))
                 {
+                    await using var fs = File.OpenWrite(tmpFile);
                     await response.CopyToAsync(fs);
                 }
 
@@ -54,26 +78,20 @@ public class Build : NukeBuild
         .DependsOn(DownloadBinaries)
         .Executes(() =>
         {
-            foreach (var architecture in _architectures)
-            {
-                NuGetPack(p => p
-                    .SetTargetPath(RootDirectory / "build/ImageSharp.AVCodecFormats.Native." + architecture + ".nuspec")
-                    .SetVersion(NATIVE_VERSION)
-                    .SetOutputDirectory(_packagesPath)
-                    .AddProperty("NoWarn", "NU5128"));
-            }
+            _localFeedPath.CreateOrCleanDirectory();
+            _packagesPath.CreateOrCleanDirectory();
 
-            NuGetPack(p => p
-                .SetTargetPath(RootDirectory / "build/ImageSharp.AVCodecFormats.Native.nuspec")
-                .SetVersion(NATIVE_VERSION)
-                .SetOutputDirectory(_packagesPath)
-                .AddProperty("NoWarn", "NU5128"));
+            PackRuntimeProject("ImageSharp.AVCodecFormats.Native.linux-x64.csproj");
+            PackRuntimeProject("ImageSharp.AVCodecFormats.Native.win-x64.csproj");
+
+            PackMetaProject();
         });
 
     private Target CleanUp => _ => _
         .Executes(() =>
         {
             _packagesPath.CreateOrCleanDirectory();
+            _localFeedPath.CreateOrCleanDirectory();
             _binPath.CreateOrCleanDirectory();
         });
 

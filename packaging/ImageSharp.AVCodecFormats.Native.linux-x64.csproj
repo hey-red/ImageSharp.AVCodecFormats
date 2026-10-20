@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard1.0</TargetFramework>
+        <PackageId>ImageSharp.AVCodecFormats.Native.linux-x64</PackageId>
+        <Version>4.0.0</Version>
+        <Authors>red</Authors>
+        <PackageDescription>This package contains native ffmpeg binaries</PackageDescription>
+        <PackageProjectUrl>https://github.com/hey-red/ImageSharp.AVCodecFormats</PackageProjectUrl>
+        <PackageTags>ffmpeg binaries</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="../build/binaries/linux-x64/*.so.*"
+              Pack="true"
+              PackagePath="runtimes/linux-x64/native/" />
+        <None Include="_._"
+              Pack="true"
+              PackagePath="lib/netstandard1.0/" />
+    </ItemGroup>
+</Project>

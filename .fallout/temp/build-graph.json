@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "falloutVersion": "10.4.0.15",
+  "targets": [
+    {
+      "name": "All",
+      "description": null,
+      "declaredIn": "Build",
+      "default": true,
+      "listed": true,
+      "dependsOn": [
+        "CleanUp",
+        "CreateNuGetPackages"
+      ],
+      "after": [],
+      "triggeredBy": [],
+      "triggers": []
+    },
+    {
+      "name": "CleanUp",
+      "description": null,
+      "declaredIn": "Build",
+      "default": false,
+      "listed": true,
+      "dependsOn": [],
+      "after": [],
+      "triggeredBy": [],
+      "triggers": []
+    },
+    {
+      "name": "CreateNuGetPackages",
+      "description": null,
+      "declaredIn": "Build",
+      "default": false,
+      "listed": true,
+      "dependsOn": [
+        "DownloadBinaries"
+      ],
+      "after": [],
+      "triggeredBy": [],
+      "triggers": []
+    },
+    {
+      "name": "DownloadBinaries",
+      "description": null,
+      "declaredIn": "Build",
+      "default": false,
+      "listed": true,
+      "dependsOn": [],
+      "after": [],
+      "triggeredBy": [],
+      "triggers": []
+    }
+  ]
+}
