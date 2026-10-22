@@ -6,6 +6,8 @@ FFmpeg decoders for [ImageSharp](https://github.com/SixLabors/ImageSharp)
 
 via [NuGet](https://www.nuget.org/packages/ImageSharp.AVCodecFormats):
 
+### NOTE: ImageSharp 4.x requires sixlabors.lic to be included in the distributed app.
+
 ```
 PM> Install-Package ImageSharp.AVCodecFormats
 ```
@@ -147,9 +149,7 @@ mp4, webm, avi, mkv, mov, ts, wmv, mp3(cover image).
 
 [Native package](https://www.nuget.org/packages/ImageSharp.AVCodecFormats.Native) provides codecs listed below:
 
-H263, H264, H.265(HEVC), VP8, VP9, AV1, MPEG-4, MJPEG, PNG, MS MPEG4(v1,v2,v3), WMV(v1,v2,v3), VC-1, MPEG-1 Audio Layer
-
-3.
+H263, H264, H.265(HEVC), VP8, VP9, AV1, MPEG-4, MJPEG, PNG, MS MPEG4(v1,v2,v3), WMV(v1,v2,v3), VC-1, MPEG-1 Audio Layer 3.
 
 ## License
 
