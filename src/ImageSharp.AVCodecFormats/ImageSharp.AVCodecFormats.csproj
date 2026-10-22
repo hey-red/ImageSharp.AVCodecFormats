@@ -4,7 +4,7 @@
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
-        <version>6.0.0</version>
+        <version>6.1.0</version>
         <Authors>red</Authors>
         <RootNamespace>HeyRed.ImageSharp.AVCodecFormats</RootNamespace>
         <LangVersion>latest</LangVersion>
