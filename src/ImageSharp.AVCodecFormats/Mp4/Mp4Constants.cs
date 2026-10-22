@@ -140,4 +140,15 @@ internal static class Mp4Constants
         0x56, // V
         0x20
     };
+    
+    /// <summary>
+    ///     M4A
+    /// </summary>
+    public static readonly byte[] M4aBrandHeader =
+    {
+        0x4D, // M
+        0x34, // 4
+        0x41, // A
+        0x20
+    };
 }

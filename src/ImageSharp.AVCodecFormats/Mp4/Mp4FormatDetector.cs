@@ -34,7 +34,8 @@ public sealed class Mp4FormatDetector : IImageFormatDetector
                 subHeader.SequenceEqual(Mp4Constants.Mp41BrandHeader) ||
                 subHeader.SequenceEqual(Mp4Constants.Mp42BrandHeader) ||
                 subHeader.SequenceEqual(Mp4Constants.DashBrandHeader) ||
-                subHeader.SequenceEqual(Mp4Constants.M4vBrandHeader);
+                subHeader.SequenceEqual(Mp4Constants.M4vBrandHeader) ||
+                subHeader.SequenceEqual(Mp4Constants.M4aBrandHeader);
         }
 
         return false;
