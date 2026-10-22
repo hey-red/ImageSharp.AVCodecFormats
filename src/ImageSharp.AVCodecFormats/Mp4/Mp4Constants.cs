@@ -4,9 +4,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp4;
 
 internal static class Mp4Constants
 {
-    public static readonly IEnumerable<string> FileExtensions = new[] { "mp4" };
+    public static readonly IEnumerable<string> FileExtensions = new[] { "mp4", "m4a" };
 
-    public static readonly IEnumerable<string> MimeTypes = new[] { "video/mp4", "application/mp4" };
+    public static readonly IEnumerable<string> MimeTypes = new[] { "video/mp4", "application/mp4", "audio/mp4" };
 
     /// <summary>
     ///     ISO Media
