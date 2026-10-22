@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using HeyRed.ImageSharp.AVCodecFormats.Mp4;
 using SixLabors.ImageSharp.Formats;
 
 namespace HeyRed.ImageSharp.AVCodecFormats.M4A;
@@ -11,7 +10,7 @@ public sealed class M4AFormatDetector : IImageFormatDetector
 
     public bool TryDetectFormat(ReadOnlySpan<byte> header, [NotNullWhen(true)] out IImageFormat? format)
     {
-        format = IsSupportedFileFormat(header) ? Mp4Format.Instance : null;
+        format = IsSupportedFileFormat(header) ? M4AFormat.Instance : null;
 
         return format != null;
     }
