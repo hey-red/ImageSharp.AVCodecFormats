@@ -1,4 +1,5 @@
 ﻿using HeyRed.ImageSharp.AVCodecFormats.Avi;
+using HeyRed.ImageSharp.AVCodecFormats.M4A;
 using HeyRed.ImageSharp.AVCodecFormats.Mkv;
 using HeyRed.ImageSharp.AVCodecFormats.Mov;
 using HeyRed.ImageSharp.AVCodecFormats.Mp3;
@@ -88,4 +89,12 @@ public static class MetadataExtensions
     /// <returns>The <see cref="AVMetadata" />.</returns>
     public static AVMetadata GetOggMetadata(this ImageMetadata metadata) =>
         metadata.GetFormatMetadata(OggFormat.Instance);
+    
+    /// <summary>
+    ///     Gets the m4a format specific metadata for the file.
+    /// </summary>
+    /// <param name="metadata">The metadata this method extends.</param>
+    /// <returns>The <see cref="AVMetadata" />.</returns>
+    public static AVMetadata GetM4AMetadata(this ImageMetadata metadata) =>
+        metadata.GetFormatMetadata(M4AFormat.Instance);
 }

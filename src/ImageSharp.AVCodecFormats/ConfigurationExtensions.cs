@@ -1,4 +1,5 @@
 ﻿using HeyRed.ImageSharp.AVCodecFormats.Avi;
+using HeyRed.ImageSharp.AVCodecFormats.M4A;
 using HeyRed.ImageSharp.AVCodecFormats.Mkv;
 using HeyRed.ImageSharp.AVCodecFormats.Mov;
 using HeyRed.ImageSharp.AVCodecFormats.Mp3;
@@ -25,6 +26,7 @@ public static class ConfigurationExtensions
         configuration.Configure(new MpegTsConfigurationModule());
         configuration.Configure(new Mp3ConfigurationModule());
         configuration.Configure(new OggConfigurationModule());
+        configuration.Configure(new M4AConfigurationModule());
 
         return configuration;
     }

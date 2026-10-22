@@ -4,9 +4,9 @@ namespace HeyRed.ImageSharp.AVCodecFormats.Mp4;
 
 internal static class Mp4Constants
 {
-    public static readonly IEnumerable<string> FileExtensions = new[] { "mp4", "m4a" };
+    public static readonly IEnumerable<string> FileExtensions = new[] { "mp4" };
 
-    public static readonly IEnumerable<string> MimeTypes = new[] { "video/mp4", "application/mp4", "audio/mp4" };
+    public static readonly IEnumerable<string> MimeTypes = new[] { "video/mp4", "application/mp4"};
 
     /// <summary>
     ///     ISO Media
@@ -138,17 +138,6 @@ internal static class Mp4Constants
         0x4D, // M
         0x34, // 4
         0x56, // V
-        0x20
-    };
-    
-    /// <summary>
-    ///     M4A
-    /// </summary>
-    public static readonly byte[] M4aBrandHeader =
-    {
-        0x4D, // M
-        0x34, // 4
-        0x41, // A
         0x20
     };
 }
