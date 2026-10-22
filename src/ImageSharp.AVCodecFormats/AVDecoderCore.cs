@@ -15,30 +15,25 @@ using DrawingSize = System.Drawing.Size;
 
 namespace HeyRed.ImageSharp.AVCodecFormats;
 
-internal sealed unsafe class AVDecoderCore
+internal sealed class AVDecoderCore
 {
     private static readonly object _syncRoot = new();
-
     private static bool _initBinaries;
 
     private readonly DecoderOptions _decoderOptions;
-
     private readonly AVDecoderOptions _options;
 
     public AVDecoderCore(AVDecoderOptions avDecoderOptions)
     {
         if (!_initBinaries)
-        {
             lock (_syncRoot)
             {
                 if (!_initBinaries)
                 {
                     FFmpegBinariesFinder.FindBinaries();
-
                     _initBinaries = true;
                 }
             }
-        }
 
         _options = avDecoderOptions;
         _decoderOptions = avDecoderOptions.GeneralOptions;
@@ -48,18 +43,14 @@ internal sealed unsafe class AVDecoderCore
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        using MediaFile? file = MediaFile.Open(stream, new MediaOptions
+        using var file = MediaFile.Open(stream, new MediaOptions
         {
             StreamsToLoad = MediaMode.AudioVideo
         });
 
-        if (!file.HasVideo)
-        {
-            throw new InvalidDataException("The file has no video streams.");
-        }
+        if (!file.HasVideo) throw new InvalidDataException("The file has no video streams.");
 
         var metadata = new ImageMetadata();
-
         FillMetadata(metadata, file, imageFormat);
 
         return new ImageInfo(
@@ -87,41 +78,42 @@ internal sealed unsafe class AVDecoderCore
             StreamsToLoad = MediaMode.AudioVideo
         });
 
+        var width = file.Video.OutputFrameSize.Width;
+        var height = file.Video.OutputFrameSize.Height;
+        var bytesPerPixel = Unsafe.SizeOf<TPixel>();
+        var totalPixels = width * height;
+
+        // Reusable frame buffer.
+        var scratch = ArrayPool<TPixel>.Shared.Rent(totalPixels);
+        ReadOnlySpan<TPixel> scratchSpan = scratch.AsSpan(0, totalPixels);
+
         Image<TPixel>? resultImage = null;
-        uint frameCount = 0;
+        uint frameIndex = 0;
+        var frameCounter = 0;
 
-        int width = file.Video.OutputFrameSize.Width;
-        int height = file.Video.OutputFrameSize.Height;
-        int bytesPerPixel = Unsafe.SizeOf<TPixel>();
-
-        // reusable scratch buffer for current frame only
-        var scratch = ArrayPool<TPixel>.Shared.Rent(width * height);
         try
         {
-            // We pin only the current scratch buffer, never the stored result image
-            GCHandle pinned = GCHandle.Alloc(scratch, GCHandleType.Pinned);
+            var pin = GCHandle.Alloc(scratch, GCHandleType.Pinned);
             try
             {
-                IntPtr ptr = pinned.AddrOfPinnedObject();
+                var ptr = pin.AddrOfPinnedObject();
 
                 if (_options.FramesTimestamps.Length > 0)
                 {
-                    foreach (TimeSpan ts in _options.FramesTimestamps)
+                    foreach (var ts in _options.FramesTimestamps)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
 
-                        if (!file.Video.TryGetFrame(ts, ptr, width * bytesPerPixel))
-                        {
-                            continue;
-                        }
+                        if (!file.Video.TryGetFrame(ts, ptr, width * bytesPerPixel)) continue;
 
-                        var current = Image.LoadPixelData<TPixel>(
+                        var current = LoadFrame(
                             _decoderOptions.Configuration,
-                            CopyFromPinnedBuffer(scratch, width, height),
+                            scratchSpan,
                             width,
-                            height);
+                            height,
+                            frameIndex);
 
-                        bool mustBeSkipped = _options.FrameFilter?.Invoke(current.Frames.RootFrame, frameCount) is true;
+                        var mustBeSkipped = _options.FrameFilter?.Invoke(current.Frames.RootFrame, frameIndex) is true;
                         if (mustBeSkipped)
                         {
                             current.Dispose();
@@ -129,32 +121,31 @@ internal sealed unsafe class AVDecoderCore
                         }
 
                         if (resultImage is null)
-                        {
                             resultImage = current;
-                        }
                         else
-                        {
                             resultImage.Frames.AddFrame(current.Frames.RootFrame);
-                        }
 
-                        if (++frameCount >= _decoderOptions.MaxFrames)
-                        {
-                            break;
-                        }
+                        frameIndex++;
+                        frameCounter++;
+
+                        if (frameCounter >= _decoderOptions.MaxFrames) break;
                     }
 
-                    // Fallback: first frame if no timestamp match
+                    // Fallback if no timestamp matched.
                     if (resultImage is null)
                     {
                         file.Reset();
 
                         if (file.Video.TryGetNextFrame(ptr, width * bytesPerPixel))
                         {
-                            resultImage = Image.LoadPixelData(
+                            var current = LoadFrame(
                                 _decoderOptions.Configuration,
-                                CopyFromPinnedBuffer(scratch, width, height),
+                                scratchSpan,
                                 width,
-                                height);
+                                height,
+                                frameIndex);
+
+                            resultImage = current;
                         }
                     }
                 }
@@ -164,39 +155,32 @@ internal sealed unsafe class AVDecoderCore
                     {
                         cancellationToken.ThrowIfCancellationRequested();
 
-                        var current = Image.LoadPixelData<TPixel>(
+                        var current = LoadFrame(
                             _decoderOptions.Configuration,
-                            CopyFromPinnedBuffer(scratch, width, height),
+                            scratchSpan,
                             width,
-                            height);
+                            height,
+                            frameIndex);
 
-                        bool mustBeSkipped = _options.FrameFilter?.Invoke(current.Frames.RootFrame, frameCount) is true;
-                        if (resultImage is null)
-                        {
-                            if (!mustBeSkipped || frameCount + 1 == _decoderOptions.MaxFrames)
-                            {
-                                resultImage = current;
-                            }
-                            else
-                            {
-                                current.Dispose();
-                            }
-                        }
-                        else if (!mustBeSkipped)
-                        {
+                        var mustBeSkipped = _options.FrameFilter?.Invoke(current.Frames.RootFrame, frameIndex) is true;
+
+                        if (mustBeSkipped)
+                            current.Dispose();
+                        else if (resultImage is null)
+                            resultImage = current;
+                        else
                             resultImage.Frames.AddFrame(current.Frames.RootFrame);
-                        }
 
-                        if (++frameCount >= _decoderOptions.MaxFrames)
-                        {
-                            break;
-                        }
+                        frameIndex++;
+                        frameCounter++;
+
+                        if (frameCounter >= _decoderOptions.MaxFrames) break;
                     }
                 }
             }
             finally
             {
-                pinned.Free();
+                pin.Free();
             }
         }
         finally
@@ -204,40 +188,52 @@ internal sealed unsafe class AVDecoderCore
             ArrayPool<TPixel>.Shared.Return(scratch);
         }
 
-        if (resultImage is null)
-        {
-            throw new InvalidDataException("No frames found.");
-        }
+        if (resultImage is null) throw new InvalidDataException("No frames found.");
 
-        if (!_decoderOptions.SkipMetadata)
-        {
-            FillMetadata(resultImage.Metadata, file, imageFormat);
-        }
+        if (!_decoderOptions.SkipMetadata) FillMetadata(resultImage.Metadata, file, imageFormat);
 
         return resultImage;
     }
 
-    private static TPixel[] CopyFromPinnedBuffer<TPixel>(TPixel[] scratch, int width, int height)
-        where TPixel : unmanaged
+    private static Image<TPixel> LoadFrame<TPixel>(
+        Configuration configuration,
+        ReadOnlySpan<TPixel> scratchSpan,
+        int width,
+        int height,
+        uint frameIndex)
+        where TPixel : unmanaged, IPixel<TPixel>
     {
-        var copy = new TPixel[width * height];
-        Array.Copy(scratch, copy, copy.Length);
-        return copy;
+        // This avoids creating a second temp array.
+        // The frame buffer is already in the rented array and is valid for the duration of this call.
+        var image = Image.LoadPixelData(
+            configuration,
+            scratchSpan,
+            width,
+            height);
+
+        // We don't mutate frameIndex here, but keeping it as a parameter makes this helper
+        // easier to extend to logging/debugging later without broad changes.
+        _ = frameIndex;
+        return image;
     }
 
-    private static ImagePixelFormat MapPixelFormat<TPixel>(TPixel sourcePixelFormat) => sourcePixelFormat switch
+    private static ImagePixelFormat MapPixelFormat<TPixel>(TPixel sourcePixelFormat)
+        where TPixel : unmanaged
     {
-        Rgb24 _ => ImagePixelFormat.Rgb24,
-        Bgr24 _ => ImagePixelFormat.Bgr24,
-        Rgba32 _ => ImagePixelFormat.Rgba32,
-        Argb32 _ => ImagePixelFormat.Argb32,
-        Bgra32 _ => ImagePixelFormat.Bgra32,
-        _ => throw new ArgumentException("Unsupported pixel format.")
-    };
+        return sourcePixelFormat switch
+        {
+            Rgb24 _ => ImagePixelFormat.Rgb24,
+            Bgr24 _ => ImagePixelFormat.Bgr24,
+            Rgba32 _ => ImagePixelFormat.Rgba32,
+            Argb32 _ => ImagePixelFormat.Argb32,
+            Bgra32 _ => ImagePixelFormat.Bgra32,
+            _ => throw new ArgumentException("Unsupported pixel format.")
+        };
+    }
 
     private static void FillMetadata(ImageMetadata metadata, MediaFile file, IImageFormat<AVMetadata> imageFormat)
     {
-        AVMetadata avMetadata = metadata.GetFormatMetadata(imageFormat);
+        var avMetadata = metadata.GetFormatMetadata(imageFormat);
 
         avMetadata.ContainerFormat = file.Info.ContainerFormat;
         avMetadata.Bitrate = file.Info.Bitrate;
@@ -248,9 +244,9 @@ internal sealed unsafe class AVDecoderCore
         var videoStreams = new List<VideoStreamInfo>();
         var audioStreams = new List<AudioStreamInfo>();
 
-        foreach (VideoStream? videoStream in file.VideoStreams)
+        foreach (var videoStream in file.VideoStreams)
         {
-            var videStreamInfo = new VideoStreamInfo
+            var videoStreamInfo = new VideoStreamInfo
             {
                 CodecName = videoStream.Info.CodecName,
                 Duration = videoStream.Info.Duration,
@@ -260,10 +256,10 @@ internal sealed unsafe class AVDecoderCore
                 SampleAspectRatio = videoStream.Info.SampleAspectRatio
             };
 
-            videoStreams.Add(videStreamInfo);
+            videoStreams.Add(videoStreamInfo);
         }
 
-        foreach (AudioStream? audioStream in file.AudioStreams)
+        foreach (var audioStream in file.AudioStreams)
         {
             var audioStreamInfo = new AudioStreamInfo
             {
@@ -282,38 +278,24 @@ internal sealed unsafe class AVDecoderCore
 
     private DrawingSize? CalculateTargetFrameSize(Stream stream, IImageFormat<AVMetadata> imageFormat)
     {
-        DrawingSize? targetFrameSize = null;
-        if (_decoderOptions.TargetSize == null)
-        {
-            return targetFrameSize;
-        }
+        if (_decoderOptions.TargetSize == null) return null;
 
-        // Calculate target size with aspect ratio
         if (_options.PreserveAspectRatio)
         {
-            ImageInfo sourceInfo = Identify(stream, imageFormat, CancellationToken.None);
+            var sourceInfo = Identify(stream, imageFormat, CancellationToken.None);
 
-            Size sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
+            var sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
                 sourceInfo.Size,
                 _decoderOptions.TargetSize.Value.Width,
                 _decoderOptions.TargetSize.Value.Height);
 
-            targetFrameSize = new DrawingSize(
-                sizeWithAspectRatio.Width,
-                sizeWithAspectRatio.Height);
+            if (stream.CanSeek) stream.Position = 0;
 
-            if (stream.CanSeek)
-            {
-                stream.Position = 0;
-            }
-        }
-        else
-        {
-            targetFrameSize = new DrawingSize(
-                _decoderOptions.TargetSize.Value.Width,
-                _decoderOptions.TargetSize.Value.Height);
+            return new DrawingSize(sizeWithAspectRatio.Width, sizeWithAspectRatio.Height);
         }
 
-        return targetFrameSize;
+        return new DrawingSize(
+            _decoderOptions.TargetSize.Value.Width,
+            _decoderOptions.TargetSize.Value.Height);
     }
 }
