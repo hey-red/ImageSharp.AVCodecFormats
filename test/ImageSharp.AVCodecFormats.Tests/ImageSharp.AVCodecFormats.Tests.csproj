@@ -4,7 +4,6 @@
         <TargetFramework>net10.0</TargetFramework>
         <IsPackable>false</IsPackable>
         <LangVersion>latest</LangVersion>
-        <SixLaborsLicenseFile>sixlabors.lic</SixLaborsLicenseFile>
     </PropertyGroup>
 
     <ItemGroup>
