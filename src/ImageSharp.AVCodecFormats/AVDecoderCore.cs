@@ -75,7 +75,8 @@ internal sealed class AVDecoderCore
             {
                 FlagDiscardCorrupt = true
             },
-            StreamsToLoad = MediaMode.AudioVideo
+            StreamsToLoad = MediaMode.AudioVideo,
+            DecoderThreads = _options.DecoderThreads
         });
 
         var width = file.Video.OutputFrameSize.Width;

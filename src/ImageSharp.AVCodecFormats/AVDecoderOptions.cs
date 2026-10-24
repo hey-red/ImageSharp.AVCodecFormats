@@ -35,4 +35,6 @@ public sealed class AVDecoderOptions : ISpecializedDecoderOptions
 
     /// <inheritdoc />
     public DecoderOptions GeneralOptions { get; init; } = new();
+
+    public int DecoderThreads { get; init; } = 0;
 }
