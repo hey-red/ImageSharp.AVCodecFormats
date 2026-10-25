@@ -36,5 +36,9 @@ public sealed class AVDecoderOptions : ISpecializedDecoderOptions
     /// <inheritdoc />
     public DecoderOptions GeneralOptions { get; init; } = new();
 
+    /// <summary>
+    ///     Gets the number of video decoder threads. 0 (the default) lets libavcodec choose automatically,
+    ///     1 disables multithreading.
+    /// </summary>
     public int DecoderThreads { get; init; } = 0;
 }
