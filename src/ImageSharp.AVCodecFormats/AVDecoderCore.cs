@@ -45,7 +45,10 @@ internal sealed class AVDecoderCore
 
         using var file = MediaFile.Open(stream, new MediaOptions
         {
-            StreamsToLoad = MediaMode.AudioVideo
+            StreamsToLoad = MediaMode.AudioVideo,
+            // Identify never decodes frames, so there is no reason to start decoder threads. Without this the
+            // library default (automatic threading) would create them for nothing on every call.
+            DecoderThreads = 1
         });
 
         if (!file.HasVideo) throw new InvalidDataException("The file has no video streams.");
@@ -64,7 +67,7 @@ internal sealed class AVDecoderCore
         CancellationToken cancellationToken)
         where TPixel : unmanaged, IPixel<TPixel>
     {
-        var targetFrameSize = CalculateTargetFrameSize(stream, imageFormat);
+        var targetFrameSize = CalculateTargetFrameSize(stream);
 
         using var file = MediaFile.Open(stream, new MediaOptions
         {
@@ -75,13 +78,17 @@ internal sealed class AVDecoderCore
             {
                 FlagDiscardCorrupt = true
             },
-            StreamsToLoad = MediaMode.AudioVideo,
+            // Audio streams are only needed to fill the metadata.
+            StreamsToLoad = _decoderOptions.SkipMetadata ? MediaMode.Video : MediaMode.AudioVideo,
             DecoderThreads = _options.DecoderThreads
         });
+
+        if (!file.HasVideo) throw new InvalidDataException("The file has no video streams.");
 
         var width = file.Video.OutputFrameSize.Width;
         var height = file.Video.OutputFrameSize.Height;
         var bytesPerPixel = Unsafe.SizeOf<TPixel>();
+        var stride = width * bytesPerPixel;
         var totalPixels = width * height;
 
         // Reusable frame buffer.
@@ -105,26 +112,18 @@ internal sealed class AVDecoderCore
                     {
                         cancellationToken.ThrowIfCancellationRequested();
 
-                        if (!file.Video.TryGetFrame(ts, ptr, width * bytesPerPixel)) continue;
-
-                        var current = LoadFrame(
+                        if (!file.Video.TryGetFrame(ts, ptr, stride)) continue;
+                        
+                        var kept = AppendFrame(
+                            ref resultImage,
                             _decoderOptions.Configuration,
                             scratchSpan,
                             width,
                             height,
+                            _options.FrameFilter,
                             frameIndex);
 
-                        var mustBeSkipped = _options.FrameFilter?.Invoke(current.Frames.RootFrame, frameIndex) is true;
-                        if (mustBeSkipped)
-                        {
-                            current.Dispose();
-                            continue;
-                        }
-
-                        if (resultImage is null)
-                            resultImage = current;
-                        else
-                            resultImage.Frames.AddFrame(current.Frames.RootFrame);
+                        if (!kept) continue;
 
                         frameIndex++;
                         frameCounter++;
@@ -137,41 +136,31 @@ internal sealed class AVDecoderCore
                     {
                         file.Reset();
 
-                        if (file.Video.TryGetNextFrame(ptr, width * bytesPerPixel))
+                        if (file.Video.TryGetNextFrame(ptr, stride))
                         {
-                            var current = LoadFrame(
+                            resultImage = Image.LoadPixelData(
                                 _decoderOptions.Configuration,
                                 scratchSpan,
                                 width,
-                                height,
-                                frameIndex);
-
-                            resultImage = current;
+                                height);
                         }
                     }
                 }
                 else
                 {
-                    while (file.Video.TryGetNextFrame(ptr, width * bytesPerPixel))
+                    while (file.Video.TryGetNextFrame(ptr, stride))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
 
-                        var current = LoadFrame(
+                        AppendFrame(
+                            ref resultImage,
                             _decoderOptions.Configuration,
                             scratchSpan,
                             width,
                             height,
+                            _options.FrameFilter,
                             frameIndex);
-
-                        var mustBeSkipped = _options.FrameFilter?.Invoke(current.Frames.RootFrame, frameIndex) is true;
-
-                        if (mustBeSkipped)
-                            current.Dispose();
-                        else if (resultImage is null)
-                            resultImage = current;
-                        else
-                            resultImage.Frames.AddFrame(current.Frames.RootFrame);
-
+                        
                         frameIndex++;
                         frameCounter++;
 
@@ -183,39 +172,64 @@ internal sealed class AVDecoderCore
             {
                 pin.Free();
             }
+
+            if (resultImage is null) throw new InvalidDataException("No frames found.");
+
+            if (!_decoderOptions.SkipMetadata) FillMetadata(resultImage.Metadata, file, imageFormat);
+
+            return resultImage;
+        }
+        catch
+        {
+            resultImage?.Dispose();
+            throw;
         }
         finally
         {
             ArrayPool<TPixel>.Shared.Return(scratch);
         }
-
-        if (resultImage is null) throw new InvalidDataException("No frames found.");
-
-        if (!_decoderOptions.SkipMetadata) FillMetadata(resultImage.Metadata, file, imageFormat);
-
-        return resultImage;
     }
 
-    private static Image<TPixel> LoadFrame<TPixel>(
+    /// <summary>
+    ///     Adds the frame that is currently stored in <paramref name="pixels" /> to the result image.
+    /// </summary>
+    /// <returns><see langword="true" /> if the frame was kept, <see langword="false" /> if the filter rejected it.</returns>
+    private static bool AppendFrame<TPixel>(
+        ref Image<TPixel>? resultImage,
         Configuration configuration,
-        ReadOnlySpan<TPixel> scratchSpan,
+        ReadOnlySpan<TPixel> pixels,
         int width,
         int height,
+        Func<ImageFrame, uint, bool>? frameFilter,
         uint frameIndex)
         where TPixel : unmanaged, IPixel<TPixel>
     {
-        // This avoids creating a second temp array.
-        // The frame buffer is already in the rented array and is valid for the duration of this call.
-        var image = Image.LoadPixelData(
-            configuration,
-            scratchSpan,
-            width,
-            height);
+        if (resultImage is null)
+        {
+            // An Image cannot exist without a frame, so the first frame has to be created as a standalone image.
+            var first = Image.LoadPixelData(configuration, pixels, width, height);
 
-        // We don't mutate frameIndex here, but keeping it as a parameter makes this helper
-        // easier to extend to logging/debugging later without broad changes.
-        _ = frameIndex;
-        return image;
+            if (frameFilter?.Invoke(first.Frames.RootFrame, frameIndex) is true)
+            {
+                first.Dispose();
+                return false;
+            }
+
+            resultImage = first;
+            return true;
+        }
+
+        // Copy the pixels straight into a new frame of the result image.
+        var frame = resultImage.Frames.AddFrame(pixels);
+
+        if (frameFilter?.Invoke(frame, frameIndex) is true)
+        {
+            // The result image already has at least one frame, so removing this one is allowed.
+            resultImage.Frames.RemoveFrame(resultImage.Frames.Count - 1);
+            return false;
+        }
+
+        return true;
     }
 
     private static ImagePixelFormat MapPixelFormat<TPixel>(TPixel sourcePixelFormat)
@@ -277,20 +291,25 @@ internal sealed class AVDecoderCore
         avMetadata.AudioStreams = audioStreams;
     }
 
-    private DrawingSize? CalculateTargetFrameSize(Stream stream, IImageFormat<AVMetadata> imageFormat)
+    private DrawingSize? CalculateTargetFrameSize(Stream stream)
     {
         if (_decoderOptions.TargetSize == null) return null;
 
         if (_options.PreserveAspectRatio)
         {
-            var sourceInfo = Identify(stream, imageFormat, CancellationToken.None);
+            if (!stream.CanSeek)
+                throw new NotSupportedException("PreserveAspectRatio requires a seekable stream.");
+
+            var startPosition = stream.Position;
+
+            var sourceSize = ReadVideoFrameSize(stream);
+
+            stream.Position = startPosition;
 
             var sizeWithAspectRatio = ResizeHelper.CalculateMaxRectangle(
-                sourceInfo.Size,
+                sourceSize,
                 _decoderOptions.TargetSize.Value.Width,
                 _decoderOptions.TargetSize.Value.Height);
-
-            if (stream.CanSeek) stream.Position = 0;
 
             return new DrawingSize(sizeWithAspectRatio.Width, sizeWithAspectRatio.Height);
         }
@@ -298,5 +317,23 @@ internal sealed class AVDecoderCore
         return new DrawingSize(
             _decoderOptions.TargetSize.Value.Width,
             _decoderOptions.TargetSize.Value.Height);
+    }
+
+    /// <summary>
+    ///     Reads only the frame size of the first video stream.
+    /// </summary>
+    private static Size ReadVideoFrameSize(Stream stream)
+    {
+        using var file = MediaFile.Open(stream, new MediaOptions
+        {
+            StreamsToLoad = MediaMode.Video,
+            DecoderThreads = 1
+        });
+
+        if (!file.HasVideo) throw new InvalidDataException("The file has no video streams.");
+
+        var size = file.Video.Info.FrameSize;
+
+        return new Size(size.Width, size.Height);
     }
 }
