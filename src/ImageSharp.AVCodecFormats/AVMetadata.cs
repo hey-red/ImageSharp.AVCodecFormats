@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using FFmpeg.AutoGen;
 using SixLabors.ImageSharp;
@@ -26,9 +27,9 @@ public unsafe class AVMetadata : IFormatMetadata<AVMetadata>
         ContainerFormat = other.ContainerFormat;
         Bitrate = other.Bitrate;
         Duration = other.Duration;
-        ContainerMetadata = other.ContainerMetadata;
-        VideoStreams = other.VideoStreams;
-        AudioStreams = other.AudioStreams;
+        ContainerMetadata = new(other.ContainerMetadata);
+        VideoStreams = [.. other.VideoStreams];
+        AudioStreams = [.. other.AudioStreams];
         PixelFormat = other.PixelFormat;
     }
 
@@ -79,7 +80,7 @@ public unsafe class AVMetadata : IFormatMetadata<AVMetadata>
             AnimateRootFrame = true,
             BackgroundColor = Color.Transparent,
             PixelTypeInfo = this.GetPixelTypeInfo(),
-        };; 
+        };
     }
 
     public void AfterImageApply<TPixel>(Image<TPixel> destination, Matrix4x4 matrix) where TPixel : unmanaged, IPixel<TPixel>
