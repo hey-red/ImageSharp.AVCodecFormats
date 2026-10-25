@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 using FFMediaToolkit;
@@ -48,9 +48,8 @@ internal static class FFmpegBinariesFinder
     private static string? FindFFmpegLibraryPath()
     {
         PlatformID currentPlatform = GetCurrentPlatformId();
-        // Should be Environment.CurrentDirectory, but
-        // https://github.com/dotnet/project-system/issues/5053
-        var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+        
+        var currentPath = AppContext.BaseDirectory;
 
         // Deconstruct available since netstandart2.1 :(
         var probeLib = ffmpeg.LibraryVersionMap.First();
@@ -81,20 +80,41 @@ internal static class FFmpegBinariesFinder
             return runtimePath;
         }
 
-        // Find inside system dir(linux only)
+        // Find inside system dirs(linux only)
         if (currentPlatform == PlatformID.Unix)
         {
-            var unixLibPath = $"/usr/lib/x86{(Environment.Is64BitOperatingSystem ? "_64" : "")}-linux-gnu";
-
-            libPath = Path.Combine(unixLibPath, libNameWithVersion);
-            if (File.Exists(libPath))
+            foreach (var systemPath in GetLinuxSystemLibraryPaths())
             {
-                return unixLibPath;
+                if (File.Exists(Path.Combine(systemPath, libNameWithVersion)))
+                {
+                    return systemPath;
+                }
             }
         }
 
         // TODO: LD_LIBRARY_PATH, PATH on windows
 
         return null;
+    }
+    
+    private static IEnumerable<string> GetLinuxSystemLibraryPaths()
+    {
+        var triplet = RuntimeInformation.ProcessArchitecture switch
+        {
+            Architecture.X64 => "x86_64-linux-gnu",
+            Architecture.Arm64 => "aarch64-linux-gnu",
+            Architecture.Arm => "arm-linux-gnueabihf",
+            Architecture.X86 => "i386-linux-gnu",
+            _ => null
+        };
+
+        if (triplet != null)
+        {
+            yield return $"/usr/lib/{triplet}";
+        }
+
+        yield return "/usr/lib64";
+        yield return "/usr/lib";
+        yield return "/usr/local/lib";
     }
 }
