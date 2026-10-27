@@ -6,7 +6,7 @@ namespace HeyRed.ImageSharp.AVCodecFormats.M4A;
 public sealed class M4AConfigurationModule : IImageFormatConfigurationModule
 {
     /// <summary>
-    ///     Registers the image encoders, decoders and mime type detectors for the mp4 format.
+    ///     Registers the image encoders, decoders and mime type detectors for the m4a format.
     /// </summary>
     public void Configure(Configuration configuration)
     {

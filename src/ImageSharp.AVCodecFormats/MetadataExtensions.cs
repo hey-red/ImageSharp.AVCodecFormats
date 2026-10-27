@@ -8,7 +8,6 @@ using HeyRed.ImageSharp.AVCodecFormats.MpegTs;
 using HeyRed.ImageSharp.AVCodecFormats.Ogg;
 using HeyRed.ImageSharp.AVCodecFormats.Webm;
 using HeyRed.ImageSharp.AVCodecFormats.Wmv;
-
 using SixLabors.ImageSharp.Metadata;
 
 namespace HeyRed.ImageSharp.AVCodecFormats;
@@ -23,78 +22,108 @@ public static class MetadataExtensions
     /// </summary>
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata" />.</returns>
-    public static AVMetadata GetAviMetadata(this ImageMetadata metadata) =>
-        metadata.GetFormatMetadata(AviFormat.Instance);
+    public static AVMetadata GetAviMetadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(AviFormat.Instance);
+    }
 
     /// <summary>
     ///     Gets the mkv format specific metadata for the file.
     /// </summary>
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata" />.</returns>
-    public static AVMetadata GetMkvMetadata(this ImageMetadata metadata) =>
-        metadata.GetFormatMetadata(MkvFormat.Instance);
+    public static AVMetadata GetMkvMetadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(MkvFormat.Instance);
+    }
 
     /// <summary>
     ///     Gets the mov format specific metadata for the file.
     /// </summary>
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata" />.</returns>
-    public static AVMetadata GetMovMetadata(this ImageMetadata metadata) =>
-        metadata.GetFormatMetadata(MovFormat.Instance);
+    public static AVMetadata GetMovMetadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(MovFormat.Instance);
+    }
 
     /// <summary>
     ///     Gets the mp3 format specific metadata for the file.
     /// </summary>
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata" />.</returns>
-    public static AVMetadata GetMp3Metadata(this ImageMetadata metadata) =>
-        metadata.GetFormatMetadata(Mp3Format.Instance);
+    public static AVMetadata GetMp3Metadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(Mp3Format.Instance);
+    }
 
     /// <summary>
     ///     Gets the mp4 format specific metadata for the file.
     /// </summary>
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata" />.</returns>
-    public static AVMetadata GetMp4Metadata(this ImageMetadata metadata) =>
-        metadata.GetFormatMetadata(Mp4Format.Instance);
+    public static AVMetadata GetMp4Metadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(Mp4Format.Instance);
+    }
 
     /// <summary>
     ///     Gets the mpeg ts format specific metadata for the file.
     /// </summary>
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata" />.</returns>
-    public static AVMetadata GetMpegTsMetadata(this ImageMetadata metadata) =>
-        metadata.GetFormatMetadata(MpegTsFormat.Instance);
+    public static AVMetadata GetMpegTsMetadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(MpegTsFormat.Instance);
+    }
 
     /// <summary>
     ///     Gets the webm format specific metadata for the file.
     /// </summary>
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata" />.</returns>
-    public static AVMetadata GetWebmMetadata(this ImageMetadata metadata) =>
-        metadata.GetFormatMetadata(WebmFormat.Instance);
+    public static AVMetadata GetWebmMetadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(WebmFormat.Instance);
+    }
 
     /// <summary>
     ///     Gets the wmv format specific metadata for the file.
     /// </summary>
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata" />.</returns>
-    public static AVMetadata GetWmvMetadata(this ImageMetadata metadata) =>
-        metadata.GetFormatMetadata(WmvFormat.Instance);
+    public static AVMetadata GetWmvMetadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(WmvFormat.Instance);
+    }
 
     /// <summary>
     ///     Gets the ogg format specific metadata for the file.
     /// </summary>
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata" />.</returns>
-    public static AVMetadata GetOggMetadata(this ImageMetadata metadata) =>
-        metadata.GetFormatMetadata(OggFormat.Instance);
-    
+    public static AVMetadata GetOggMetadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(OggFormat.Instance);
+    }
+
     /// <summary>
     ///     Gets the m4a format specific metadata for the file.
     /// </summary>
     /// <param name="metadata">The metadata this method extends.</param>
     /// <returns>The <see cref="AVMetadata" />.</returns>
-    public static AVMetadata GetM4AMetadata(this ImageMetadata metadata) =>
-        metadata.GetFormatMetadata(M4AFormat.Instance);
+    public static AVMetadata GetM4AMetadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(M4AFormat.Instance);
+    }
+
+    /// <summary>
+    ///     Gets the m4a format specific metadata for the file.
+    /// </summary>
+    /// <param name="metadata">The metadata this method extends.</param>
+    /// <returns>The <see cref="AVMetadata" />.</returns>
+    public static AVMetadata GetAvifMetadata(this ImageMetadata metadata)
+    {
+        return metadata.GetFormatMetadata(AviFormat.Instance);
+    }
 }
