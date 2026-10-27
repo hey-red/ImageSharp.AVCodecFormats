@@ -1,15 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-
 using HeyRed.ImageSharp.AVCodecFormats;
 using HeyRed.ImageSharp.AVCodecFormats.Webm;
-
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
-
 using Xunit;
 using Xunit.Abstractions;
 
@@ -29,22 +26,24 @@ public class BasicTests
         _output = output;
         _testVideoDataPath = TestHelpers.GetTestDataPath();
 
-        _decoderOptions = new DecoderOptions
+        _decoderOptions = new()
         {
             MaxFrames = 1,
             Configuration = new Configuration().WithAVDecoders()
         };
 
-        _resizeOptions = new ResizeOptions
+        _resizeOptions = new()
         {
-            Size = new Size(200),
+            Size = new(200),
             Mode = ResizeMode.Max
         };
     }
 
     private IImageFormat GetFormat(string format)
-        => _decoderOptions.Configuration.ImageFormats
+    {
+        return _decoderOptions.Configuration.ImageFormats
             .FirstOrDefault(x => x.FileExtensions.Contains(format));
+    }
 
     [Theory]
     [InlineData("avc.mp4", 640, 360)]
@@ -59,17 +58,18 @@ public class BasicTests
     [InlineData("mpga.mp3", 700, 700)]
     [InlineData("two_video_stream.webm", 640, 480)]
     [InlineData("opus.oga", 700, 700)]
+    [InlineData("tiger.avif", 1216, 832)]
     public void IdentifyTests(string fileName, int width, int height)
     {
         var filePath = Path.Combine(_testVideoDataPath, fileName);
         var extension = Path.GetExtension(filePath).Replace(".", "");
 
-        IImageFormat format = GetFormat(extension);
+        var format = GetFormat(extension);
 
         _output.WriteLine($"Processing file: \"{Path.GetFileName(filePath)}\"");
 
-        using FileStream inputStream = File.OpenRead(filePath);
-        ImageInfo imageInfo = Image.Identify(_decoderOptions, inputStream);
+        using var inputStream = File.OpenRead(filePath);
+        var imageInfo = Image.Identify(_decoderOptions, inputStream);
 
         _output.WriteLine($"Dimensions: {imageInfo.Width}x{imageInfo.Height}");
 
@@ -90,6 +90,7 @@ public class BasicTests
     [InlineData("vp8.webm", 344, 360, 191, 200)]
     [InlineData("mpga.mp3", 700, 700, 200, 200)]
     [InlineData("opus.oga", 700, 700, 200, 200)]
+    [InlineData("tiger.avif", 1216, 832, 200, 137)]
     public void ThumbnailTests(
         string fileName,
         int width,
@@ -97,13 +98,13 @@ public class BasicTests
         int thumbWidth,
         int thumbHeight)
     {
-        string filePath = Path.Combine(_testVideoDataPath, fileName);
+        var filePath = Path.Combine(_testVideoDataPath, fileName);
 
         _output.WriteLine($"Processing file: \"{Path.GetFileName(filePath)}\"");
 
-        using FileStream inputStream = File.OpenRead(filePath);
+        using var inputStream = File.OpenRead(filePath);
         using var outputStream = new MemoryStream();
-        using Image image = Image.Load(_decoderOptions, inputStream);
+        using var image = Image.Load(_decoderOptions, inputStream);
 
         _output.WriteLine($"Source dimensions: {image.Width}x{image.Height}");
 
@@ -130,14 +131,14 @@ public class BasicTests
     {
         var decoderOptions = new AVDecoderOptions
         {
-           FramesTimestamps = seconds.Select(s => TimeSpan.FromSeconds(s)).ToArray()
+            FramesTimestamps = seconds.Select(s => TimeSpan.FromSeconds(s)).ToArray()
         };
 
-        string filePath = Path.Combine(_testVideoDataPath, fileName);
+        var filePath = Path.Combine(_testVideoDataPath, fileName);
 
-        using FileStream inputStream = File.OpenRead(filePath);
-        using Image image = WebmDecoder.Instance.Decode(decoderOptions, inputStream);
-        
+        using var inputStream = File.OpenRead(filePath);
+        using var image = WebmDecoder.Instance.Decode(decoderOptions, inputStream);
+
         Assert.Equal(seconds.Length, image.Frames.Count);
     }
 }
