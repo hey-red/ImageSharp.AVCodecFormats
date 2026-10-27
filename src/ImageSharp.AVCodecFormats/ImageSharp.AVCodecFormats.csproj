@@ -4,7 +4,7 @@
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
-        <version>6.2.0</version>
+        <version>6.3.0</version>
         <Authors>red</Authors>
         <RootNamespace>HeyRed.ImageSharp.AVCodecFormats</RootNamespace>
         <LangVersion>latest</LangVersion>
@@ -21,14 +21,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FFmpeg.AutoGen" Version="9.0.1.1" />
-        <PackageReference Include="SixLabors.ImageSharp" Version="4.1.3" />
+        <PackageReference Include="FFmpeg.AutoGen" Version="9.0.1.1"/>
+        <PackageReference Include="SixLabors.ImageSharp" Version="4.1.3"/>
     </ItemGroup>
 
     <ItemGroup>
         <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
-    
+
     <ItemGroup>
         <ProjectReference Include="..\..\FFMediaToolkit\FFMediaToolkit\FFMediaToolkit.csproj" PrivateAssets="All"/>
     </ItemGroup>
